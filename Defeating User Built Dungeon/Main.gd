@@ -1,9 +1,21 @@
 extends Node
 
-var currentRoom = 1
+# Major, Minor, Patch
+var version = [0, 2, 1]
+
+var currentRoom = 0
 var levelChange = false
 
 var Rooms = ["""
+XXXXXXXXXXXX
+X@         X
+X         YX
+XXDXXXXXXXXX
+X         >X
+XXXXXXXXXXXX
+"""]
+
+const RoomsStore = ["""
 XXXXXXXXXXXX
 X@         X
 X         YX
