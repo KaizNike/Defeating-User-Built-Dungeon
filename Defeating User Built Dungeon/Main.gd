@@ -111,11 +111,12 @@ func _files_dropped(files, screen):
 		var f = File.new()
 		f.open(file, File.READ)
 		var index = 1
+		$VSplitContainer/Label.text = ""
 		while not f.eof_reached():
 			var line = f.get_line()
-			line += " "
+#			line += " "
 			print(line + str(index))
-			
+			$VSplitContainer/Label.text += line
 			index += 1
 		pass
 
