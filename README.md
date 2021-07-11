@@ -8,3 +8,7 @@
 
 ## Project Goal
 Make a 'moddable' roguelike in Godot.
+
+### Links
+[Itch.io](https://kaizarnike.itch.io/defeating-user-built-dungeon)
+[Week 2 Devlog](https://kaizarnike.itch.io/defeating-user-built-dungeon/devlog/272748/start-building-a-roguelike-week-2)
