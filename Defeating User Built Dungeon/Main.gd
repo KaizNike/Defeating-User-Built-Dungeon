@@ -1,7 +1,7 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 3, 0]
+var version = [0, 3, 1, "-alpha"]
 
 onready var levelLabel = $VSplitContainer/LevelLabel
 onready var statusLabel = $VSplitContainer/StatusLabel
@@ -39,7 +39,7 @@ func _ready():
 	
 func _input(event):
 	if event.is_action_pressed("version_display"):
-		statusLabel.text = "v " + str(version[0]) + "." + str(version[1]) + "." + str(version[2])
+		statusLabel.text = "v " + str(version[0]) + "." + str(version[1]) + "." + str(version[2]) + version[3]
 		$NotificationTimer.start()
 	if not game_array:
 		if event.is_pressed():
