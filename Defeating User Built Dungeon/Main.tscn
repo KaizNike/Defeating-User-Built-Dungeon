@@ -14,7 +14,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Label" type="Label" parent="VSplitContainer"]
+[node name="LevelLabel" type="Label" parent="VSplitContainer"]
 margin_right = 1024.0
 margin_bottom = 585.0
 size_flags_vertical = 3
@@ -27,9 +27,15 @@ X..........X
 XXXXXXXXXXXX"
 clip_text = true
 
-[node name="Label2" type="Label" parent="VSplitContainer"]
+[node name="StatusLabel" type="Label" parent="VSplitContainer"]
 margin_top = 585.0
 margin_right = 1024.0
 margin_bottom = 600.0
 custom_fonts/font = ExtResource( 2 )
 text = "1 . . . . . . . . X"
+
+[node name="NotificationTimer" type="Timer" parent="."]
+wait_time = 4.0
+one_shot = true
+
+[connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
