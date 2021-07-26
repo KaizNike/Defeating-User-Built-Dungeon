@@ -13,8 +13,8 @@ Make a 'moddable' roguelike in Godot.
 ## How to Contribute
 This is mainly a personal learning project, so create issues, enter discussion, or make your own fork.
 
-## Current Version v0.3.1-alpha
-This update brings us to week 3 of the tutorial, and so far the basic mechanics are down.
+## Current Version v0.4.0-alpha
+This update brings us to week 4 of the tutorial, this week focused on getting enemies up and running. They are totally random, but now there is some risk!
 
 ### Links
 [Itch.io](https://kaizarnike.itch.io/defeating-user-built-dungeon) |
