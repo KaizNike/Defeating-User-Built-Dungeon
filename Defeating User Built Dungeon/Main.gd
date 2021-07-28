@@ -1,8 +1,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 4, 0, "-alpha"]
-# Latest - Week 4 - Making Mobs Move
+var version = [0, 4, 1, "-alpha"]
+# Latest - Week 4 Update - New Visuals
 
 # Future ideas - Friendly or neutral mobs
 
@@ -27,7 +27,7 @@ const RoomsStore = ["""
 """
 #############
 #OY#      #O#
-# ##     Ñ# #
+# ##     L# #
 #@ D      D #
 #############
 """]
@@ -36,7 +36,7 @@ var game_array = []
 
 const INTERACTS = [">", "<", "Y", "D", "K", "%"]
 const COLLIDES = ["#", "D", "X"]
-const ENTITIES = ["r", "k", "g", "Ñ", "@"]
+const ENTITIES = ["r", "k", "g", "L", "@"]
 const WEAPONS = ["T", "S"]
 const ARMORS = ["O", "P", "B"]
 
@@ -53,7 +53,7 @@ func _ready():
 	Rooms.append(RoomsStore[0])
 	game_array = _get_text_as_array(Rooms[0])
 	_actors_init(game_array)
-	$VSplitContainer/LevelLabel.text = "You are hunting Ñ on floor X,\n do not fail us!"
+	$VSplitContainer/LevelLabel.text = "You are hunting L on floor X,\n do not fail us!"
 	$VSplitContainer/StatusLabel.text = "Press Anything"
 	waiting = true
 	
