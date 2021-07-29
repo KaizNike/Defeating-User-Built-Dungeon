@@ -1,8 +1,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 4, 1, "-alpha"]
-# Latest - Week 4 Update - New Visuals
+var version = [0, 5, 0, "-alpha"]
+# Latest - Week 5 Update - Inventory + Ranged Scrolls
 
 # Future ideas - Friendly or neutral mobs
 
@@ -18,7 +18,7 @@ var Rooms = []
 
 const RoomsStore = ["""
 ############
-#@         #
+#@        x#
 #     rr  Y#
 ##D#########
 #<r       >#
@@ -34,18 +34,26 @@ const RoomsStore = ["""
 
 var game_array = []
 
-const INTERACTS = [">", "<", "Y", "D", "K", "%"]
+# ">" - Down Stair, "<" - Up Stair, "Y" - Key, "D" - Door, "K" - Skeleton Key, "%" - Body, "+" - Healing Potion
+const INTERACTS = [">", "<", "Y", "D", "K", "%", "+"]
+# "#" - Wall, "D" - Locked Door, "X" - Old Wall
 const COLLIDES = ["#", "D", "X"]
-const ENTITIES = ["r", "k", "g", "L", "@"]
-const WEAPONS = ["T", "S"]
+# "r" - Rat, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player, "x" - Crate
+const ENTITIES = ["r", "k", "g", "L", "@", "x"]
+# "T" - Sword, "S" - Whip, "Z" - Scroll
+const WEAPONS = ["T", "S", "Z"]
+# "O" - Shield, "P" - Platemail, "B" - Boots
 const ARMORS = ["O", "P", "B"]
 
-var inv = []
-var item = {"Char": "", "Uses": 1}
+var item = {"Char": "", "Uses": 1, "Type": "normal"}
+var scrollUse = ""
 
 var actors = []
-var being = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "", "Behav": "Random"}
-var player = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 3, "DMG": 1, "Char": "@", "Behav": "Player"}
+var being = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "", "Behav": "Random", "Inv": [], "bodyDesc": "", "Relation": "None"}
+var player = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 4, "DMG": 1, "Char": "@", "Behav": "Player", "Inv": [], "bodyDesc": "dead you", "Relation": "Self"}
+
+var corpses = []
+var body = {"Loc": Vector2.ZERO, "Inv": [], "Desc": ""}
 
 func _ready():
 	randomize()
@@ -79,11 +87,31 @@ func _being_init(Loc, Char):
 		Being.Speed = 2
 		Being.Turns = 2
 		Being.DMG = 1
+		Being.bodyDesc = "rat"
+		Being.Relation = "Hostile"
 	elif Char == "@":
 		player.Loc = Loc
 		actors.append(player)
 		print(player)
 		return
+	elif Char == "x":
+		Being.HP = 3
+		Being.Turns = 0
+		Being.Speed = 0
+		Being.Behav = "Still"
+		Being.bodyDesc = "crate"
+		var containing = item.duplicate(false)
+		var rand = randi()%2
+		match rand:
+			0:
+				containing.Char = "+"
+				containing.Type = "lesser"
+				containing.Uses = 2
+			1:
+				containing.Char = "Z"
+				containing.Type = "lightning"
+				containing.Uses = 1
+		Being.Inv.append(containing)
 	else:
 		return
 	## Should happen if in if elif group
@@ -97,6 +125,41 @@ func _input(event):
 	if event.is_action_pressed("version_display"):
 		statusLabel.text = "v " + str(version[0]) + "." + str(version[1]) + "." + str(version[2]) + version[3]
 		$NotificationTimer.start()
+	elif event.is_action_pressed("heal"):
+		if _find_and_use_item("+"):
+			$VSplitContainer/StatusLabel.text = "You heal to " + str(player.HP) + "."
+		else:
+			$VSplitContainer/StatusLabel.text = "No healing in inventory!"
+		$NotificationTimer.start()
+	elif event.is_action_pressed("use_scroll"):
+		if _find_and_use_item("Z"):
+			if scrollUse == "lightning":
+				var targetActor = {}
+				var closestDistance = 100
+				var actorIndex = 0
+				var finalActorIndex = 0
+				for actor in actors:
+					if actor.Relation != "Hostile":
+						continue
+					var distance = get_distance(player.Loc, actor.Loc)
+					if distance < closestDistance:
+						targetActor = actor
+						closestDistance = distance
+						finalActorIndex = actorIndex
+					actorIndex += 1
+				if targetActor:
+					targetActor.HP -= 5
+					$VSplitContainer/StatusLabel.text = "Lightning strikes " + targetActor.Char + " for 5 DMG."
+					$NotificationTimer.start()
+					if targetActor.HP < 1:
+						var a = game_array
+						a[targetActor.Loc.y][targetActor.Loc.x] = "%"
+						_display_array(a)
+						_add_corpse(targetActor)
+				else:
+					$VSplitContainer/StatusLabel.text = "Lightning misses."
+					$NotificationTimer.start()
+			scrollUse = ""
 	if not game_array:
 		if event.is_pressed():
 			var index = 0
@@ -174,6 +237,8 @@ func _move_actors(array, dir):
 			if Actor.Turns > 0:
 #				actors.sort_custom(SortingActors, "sort_descending")
 				return a
+		elif Actor.Behav == "Still":
+			continue
 		elif Actor.Behav == "Random":
 			var x = randi()%3-1
 			var y = 0
@@ -183,13 +248,16 @@ func _move_actors(array, dir):
 			print(actorDir)
 #					var actorDir = Vector2(-1,0)
 			var actorLoc = Actor.Loc + actorDir
-			if actorLoc.y > (a.size()-1) or actorLoc.x > (a.size()-1):
-				continue
+#			if actorLoc.y > (a.size()-1) or actorLoc.x > (a.size()-1):
+#				continue
 			var Dest = a[actorLoc.y][actorLoc.x]
 			if Dest in ENTITIES:
 				var targetIndex = 0
 				for targetActor in actors:
-					if targetActor.Char == Dest and targetActor.Loc == actorLoc and not targetActor.Char == Actor.Char:
+					if targetActor.Char == Actor.Char:
+						targetIndex += 1
+						continue
+					if targetActor.Char == Dest and targetActor.Loc == actorLoc:
 						targetActor.HP -= Actor.DMG
 						if targetActor.HP < 1:
 							if targetActor.Char == "@":
@@ -200,6 +268,7 @@ func _move_actors(array, dir):
 						if targetActor.Char == "@":
 							$VSplitContainer/StatusLabel.text = "You got hit for " + str(Actor.DMG) + " DMG!"
 							$NotificationTimer.start()
+							break
 					targetIndex += 1
 				pass
 			if Dest in COLLIDES or Dest in ENTITIES or Dest in INTERACTS:
@@ -209,9 +278,9 @@ func _move_actors(array, dir):
 				a[actorLoc.y][actorLoc.x] = Actor.Char
 				Actor.Loc = actorLoc
 				Actor.Turns -= 1
-				if Actor.Turns > 0:
+#				if Actor.Turns > 0:
 #					actors.sort_custom(SortingActors, "sort_descending")
-					print(actors)
+#					print(actors)
 	return a
 
 
@@ -230,6 +299,9 @@ func _find_player(array):
 		Pos.y += 1
 
 
+func get_distance(selfLoc:Vector2, targetLoc:Vector2):
+	return sqrt(pow(selfLoc.x-targetLoc.x, 2) + pow(selfLoc.y-targetLoc.y,2))
+
 func _handle_interaction(type, loc, array):
 	var a = array
 	if type == ">":
@@ -241,33 +313,56 @@ func _handle_interaction(type, loc, array):
 		levelDiff = -1
 		currentRoom -= 1
 	elif type == "Y":
-		var I = item
+		var I = item.duplicate(false)
 		I.Char = "Y"
-		inv.append(I)
-		print(inv)
-		$VSplitContainer/StatusLabel.text = "Grabbed a key."
+		I.Type = "door"
+		player.Inv.append(I)
+		print(player.Inv)
+		$VSplitContainer/StatusLabel.text = "Grabbed a " + I.Type + " key."
 		$NotificationTimer.start()
 	elif type == "D":
 		var result = _find_and_use_item("Y")
 		if result:
 			a[loc.y][loc.x] = " "
-#		var index = 0
-#		for spot in inv:
-#			if spot == "Y":
-#				inv.remove(index)
-#				a[loc.y][loc.x] = " "
-#			index += 1
+	elif type == "%":
+		var bodyIndex = 0
+		for Body in corpses:
+			if Body.Loc == loc:
+				var T = "You loot " + Body.Desc + ". For "
+				if not Body.Inv:
+					T += "nothing!"
+				else:
+					for item in Body.Inv:
+						player.Inv.append(item)
+						T += item.Char
+				print(player.Inv)
+				$VSplitContainer/StatusLabel.text = T
+				$NotificationTimer.start()
+				corpses.remove(bodyIndex)
+			bodyIndex += 1
 	elif type in ENTITIES:
 		if _handle_damage_from_player(type, loc):
 			a[loc.y][loc.x] = "%"
-			var actorIndex = 0
 			for actor in actors:
 				if actor.Char == type and actor.Loc == loc:
-					actors.remove(actorIndex)
-					break
-				actorIndex += 1
+					_add_corpse(actor)
 	return a
 	pass
+
+
+func _add_corpse(targetActor):
+	var actorIndex = 0
+	for actor in actors:
+		if actor.Loc == targetActor.Loc and actor.Char == targetActor.Char:
+			break
+		actorIndex += 1
+	var Body = body.duplicate(true)
+	Body.Desc = targetActor.bodyDesc
+	Body.Inv = targetActor.Inv.duplicate()
+	Body.Loc = targetActor.Loc
+	corpses.append(Body)
+	print(corpses)
+	actors.remove(actorIndex)
 
 # true if dead otherwise false
 func _handle_damage_from_player(targetChar, targetLoc) -> bool:
@@ -289,15 +384,21 @@ func _handle_damage_from_player(targetChar, targetLoc) -> bool:
 
 func _find_and_use_item(Item):
 	var spotIndex = 0
-	for spot in inv:
+	for spot in player.Inv:
 		if typeof(spot) == 18:
 			if "Char" in spot and "Uses" in spot:
 				if spot.Char == Item:
 #					print("OK!")
+					if Item == "+":
+						if spot.Type == "lesser":
+							player.HP += 1
+							print(player.HP)
+					elif Item == "Z":
+						scrollUse = spot.Type
 					spot.Uses -= 1
 					if spot.Uses == 0:
-						inv.remove(spotIndex)
-						print(inv)
+						player.Inv.remove(spotIndex)
+						print(player.Inv)
 					return true
 					
 					
