@@ -1,8 +1,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 5, 0, "-alpha"]
-# Latest - Week 5 Update - Inventory + Ranged Scrolls
+var version = [0, 5, 1, "-alpha"]
+# Latest - Week 5 Update - Inventory + Ranged Scrolls (icon update)
 
 # Future ideas - Friendly or neutral mobs
 

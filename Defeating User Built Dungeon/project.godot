@@ -12,7 +12,7 @@ config_version=4
 
 config/name="Defeating User Built Dungeon"
 run/main_scene="res://Main.tscn"
-config/icon="res://as/@icon.png"
+config/icon="res://as/@icon2small.png"
 
 [display]
 
