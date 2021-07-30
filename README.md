@@ -21,4 +21,5 @@ This update focused on getting items up to snuff. Now there is more than a key!
 [Week 2 Devlog](https://kaizarnike.itch.io/defeating-user-built-dungeon/devlog/272748/start-building-a-roguelike-week-2) |
 [Week 3 Devlog](https://kaizarnike.itch.io/defeating-user-built-dungeon/devlog/273907/adding-user-elements-week-3) |
 [Week 3 Vlog](https://www.youtube.com/watch?v=qiqjGCzRHuk) |
-[Week 4 Devlog](https://kaizarnike.itch.io/defeating-user-built-dungeon/devlog/277661/moving-the-badguy-week-4)
+[Week 4 Devlog](https://kaizarnike.itch.io/defeating-user-built-dungeon/devlog/277661/moving-the-badguy-week-4) |
+[Week 5 Devlog](https://kaizarnike.itch.io/defeating-user-built-dungeon/devlog/278679/items-are-the-spice-of-life-week-5)
