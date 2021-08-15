@@ -1,18 +1,27 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 5, 1, "-alpha"]
-# Latest - Week 5 Update - Inventory + Ranged Scrolls (icon update)
+var version = [0, 6, 0, "-alpha"]
+# Latest - Week 6 + 7 Update - Saving + Loading + Reloading
 
 # Future ideas - Friendly or neutral mobs
 
 onready var levelLabel = $VSplitContainer/LevelLabel
 onready var statusLabel = $VSplitContainer/StatusLabel
+onready var notiTimer = $NotificationTimer
 
 var currentRoom = 0
 var levelChange = false
 var waiting = false
 var levelDiff = 0
+var resetting = false
+var restarting = false
+var isDarkMode = false
+var notificationType = "status"
+
+var save_vars = ["Player", "CurrentRoom", "Rooms"]
+var autosaveLoc = "user://autosaveDUBD.tres"
+export (Script) var game_save_class
 
 var Rooms = []
 
@@ -51,6 +60,7 @@ var scrollUse = ""
 var actors = []
 var being = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "", "Behav": "Random", "Inv": [], "bodyDesc": "", "Relation": "None"}
 var player = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 4, "DMG": 1, "Char": "@", "Behav": "Player", "Inv": [], "bodyDesc": "dead you", "Relation": "Self"}
+var playerOrig = {}
 
 var corpses = []
 var body = {"Loc": Vector2.ZERO, "Inv": [], "Desc": ""}
@@ -58,12 +68,25 @@ var body = {"Loc": Vector2.ZERO, "Inv": [], "Desc": ""}
 func _ready():
 	randomize()
 	get_tree().connect("files_dropped", self, "_files_dropped")
-	Rooms.append(RoomsStore[0])
-	game_array = _get_text_as_array(Rooms[0])
-	_actors_init(game_array)
-	$VSplitContainer/LevelLabel.text = "You are hunting L on floor X,\n do not fail us!"
-	$VSplitContainer/StatusLabel.text = "Press Anything"
-	waiting = true
+	playerOrig = player.duplicate(true)
+	if not load_game(autosaveLoc):
+		Rooms.append(RoomsStore[0])
+		if Rooms.size() < currentRoom:
+			for x in range((currentRoom+1)-Rooms.size()):
+				Rooms.append(RoomsStore[0])
+		print(Rooms.size())
+		game_array = _get_text_as_array(Rooms[0])
+		_actors_init(game_array)
+		save_game(autosaveLoc)
+		levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
+		statusLabel.text = "Press Anything"
+		waiting = true
+	else:
+		game_array = _get_text_as_array(Rooms[currentRoom])
+		_actors_init(game_array)
+		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1)
+		statusLabel.text = "Press Anything"
+		waiting = true
 	
 class SortingActors:
 	static func sort_descending(a,b):
@@ -122,15 +145,72 @@ func _being_init(Loc, Char):
 #	print(actors)
 	
 func _input(event):
+#	if event is InputEventKey and event.scancode == KEY_SHIFT:
+#		print("shift")
+	if waiting and event.is_pressed():
+		waiting = false
+		_display_array(game_array)
+		_status_bar_update()
+		return
 	if event.is_action_pressed("version_display"):
 		statusLabel.text = "v " + str(version[0]) + "." + str(version[1]) + "." + str(version[2]) + version[3]
-		$NotificationTimer.start()
+		notiTimer.start()
+		return
+	elif event.is_action_pressed("dark_mode"):
+		if !isDarkMode:
+			var color = Color8(25,7,48)
+			VisualServer.set_default_clear_color(color)
+			isDarkMode = true
+			return
+		else:
+			var color = Color8(218,122,138)
+			VisualServer.set_default_clear_color(color)
+			isDarkMode = false
+			return
+	elif event.is_action_pressed("restart"):
+		if restarting:
+			# Delete autosave and start anew
+			delete_save(autosaveLoc)
+			yield(_show_save_deletion(),"completed")
+			start_over()
+			restarting = false
+			return
+		else:
+			levelLabel.text = "Press `Shift` + `r` again to restart!\nThis will delete all progress!"
+			statusLabel.text = "In restart mode."
+			restarting = true
+	elif event.is_action_pressed("reset"):
+		if resetting:
+			# Load from last autosave (should be made when files inserted or level changed.)
+			resetting = false
+			if load_game(autosaveLoc):
+				print("Game Reset!")
+				_change_level()
+			pass
+		else:
+			levelLabel.text = "Press 'r' again to reset!"
+			statusLabel.text = "In reset mode."
+			resetting = true
+		pass
+	elif resetting and event.is_pressed():
+		resetting = false
+		_display_array(game_array)
+		statusLabel.text = "Cancelled the reset."
+		notiTimer.start()
+#		_status_bar_update()
+		return
+	elif restarting and event.is_pressed() and event is InputEventKey and not event.scancode == KEY_SHIFT:
+		restarting = false
+		_display_array(game_array)
+		statusLabel.text = "Didn't restart."
+		notiTimer.start()
+		return
 	elif event.is_action_pressed("heal"):
 		if _find_and_use_item("+"):
-			$VSplitContainer/StatusLabel.text = "You heal to " + str(player.HP) + "."
+			statusLabel.text = "You heal to " + str(player.HP) + "."
 		else:
-			$VSplitContainer/StatusLabel.text = "No healing in inventory!"
-		$NotificationTimer.start()
+			statusLabel.text = "No healing in inventory!"
+		notiTimer.start()
 	elif event.is_action_pressed("use_scroll"):
 		if _find_and_use_item("Z"):
 			if scrollUse == "lightning":
@@ -149,16 +229,16 @@ func _input(event):
 					actorIndex += 1
 				if targetActor:
 					targetActor.HP -= 5
-					$VSplitContainer/StatusLabel.text = "Lightning strikes " + targetActor.Char + " for 5 DMG."
-					$NotificationTimer.start()
+					statusLabel.text = "Lightning strikes " + targetActor.Char + " for 5 DMG."
+					notiTimer.start()
 					if targetActor.HP < 1:
 						var a = game_array
 						a[targetActor.Loc.y][targetActor.Loc.x] = "%"
 						_display_array(a)
 						_add_corpse(targetActor)
 				else:
-					$VSplitContainer/StatusLabel.text = "Lightning misses."
-					$NotificationTimer.start()
+					statusLabel.text = "Lightning misses."
+					notiTimer.start()
 			scrollUse = ""
 	if not game_array:
 		if event.is_pressed():
@@ -171,18 +251,103 @@ func _input(event):
 			if currentRoom > -1:
 				levelLabel.text = "World is empty, you can't continue."
 				statusLabel.text = "Drag and drop a .txt"
-				$NotificationTimer.start()
-		return
-	if waiting and event.is_pressed():
-		waiting = false
-		_display_array(game_array)
-		_status_bar_update()
+				notiTimer.start()
 		return
 	var dir = Vector2(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
 	if dir != Vector2.ZERO or event.is_action_pressed("wait"):
 		_process_turn(game_array,dir)
 
 
+func verify_save(save):
+	var size = 0
+	var currentRoom = 0
+	for v in save_vars:
+		var inside = save.get(v)
+		print(v)
+		print(inside)
+		if inside == null:
+			return false
+		if v == "Rooms":
+			size = inside.size()
+		elif v == "CurrentRoom":
+			currentRoom = inside
+	if size < (currentRoom + 1):
+		print("Not enough rooms in save!")
+		return false
+	return true
+
+
+func save_game(loc):
+	var new_save = game_save_class.new()
+	new_save.Player = player
+	new_save.CurrentRoom = currentRoom
+	new_save.Rooms = Rooms
+	var error = ResourceSaver.save(loc, new_save)
+	if error != 0:
+		print("Error saving!")
+		print(error)
+
+
+func load_game(loc) -> bool:
+	var dir = Directory.new()
+	if not dir.file_exists(loc):
+		print("save not found!")
+		return false
+	
+	var loaded_save = load(loc)
+	if not verify_save(loaded_save):
+		print("verify failed!")
+		return false
+		
+	player = loaded_save.Player
+	currentRoom = loaded_save.CurrentRoom
+	Rooms = loaded_save.Rooms
+	
+	return true
+
+
+func delete_save(loc) -> bool:
+	var dir = Directory.new()
+	if not dir.file_exists(loc):
+		print("save not found!")
+		return false
+		
+	var result = dir.remove(loc)
+	if result == 0:
+		return true
+	else:
+		return false
+
+
+func _show_save_deletion() -> void:
+#	var text = ""
+	var store = ""
+	for x in range(10):
+		var text = ""
+		for y in range(6):
+			text += store
+			if y < 6:
+				text += "\n"
+		levelLabel.text = text
+		yield(get_tree().create_timer(0.2),"timeout")
+		store += "X"
+	return
+	
+
+func start_over():
+	Rooms.clear()
+	Rooms.append(RoomsStore[0])
+	player = playerOrig.duplicate(true)
+	currentRoom = 0
+	actors.clear()
+	corpses.clear()
+	game_array = _get_text_as_array(Rooms[0])
+	_actors_init(game_array)
+	save_game(autosaveLoc)
+	levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
+	statusLabel.text = "Press Anything"
+	waiting = true
+	
 func _process_turn(array, dir):
 #	var a = _move_player(array, dir)
 #	Handle Projectiles
@@ -194,7 +359,13 @@ func _process_turn(array, dir):
 	if not levelChange:
 		_display_array(game_array)
 	else:
-		game_array = []
+		game_array.clear()
+		if currentRoom == 9:
+			_change_level()
+			levelLabel.text = "You arrive at a most dark arena!"
+			notificationType = "level"
+			$NotificationTimer.start()
+			return
 		if levelDiff == 1:
 			levelLabel.text = "You walk downstairs."
 		elif levelDiff == -1:
@@ -206,11 +377,17 @@ func _process_turn(array, dir):
 func _move_player(array, dir, actor):
 	if dir == Vector2.ZERO:
 		print("You wait a minute.")
+		statusLabel.text = "You wait a minute."
+		notiTimer.start()
 		return array
 #	var Pos = _find_player(array)
 	var Pos = actor.Loc
 	print("At ", Pos)
 	var Loc = Pos + dir
+	if Loc.x < 0 or Loc.x > array[0].size() - 1 or Loc.y < 0 or Loc.y > array.size() - 1:
+		statusLabel.text = "You touch the bounds."
+		notiTimer.start()
+		return array
 	print("To ", Loc)
 	var Dest = array[Loc.y][Loc.x]
 	var a = array
@@ -261,13 +438,13 @@ func _move_actors(array, dir):
 						targetActor.HP -= Actor.DMG
 						if targetActor.HP < 1:
 							if targetActor.Char == "@":
-								$VSplitContainer/StatusLabel.text = "You are slain."
+								statusLabel.text = "You are slain."
 							actors.remove(targetIndex)
 							a[actorLoc.y][actorLoc.x] = "%"
 							break
 						if targetActor.Char == "@":
-							$VSplitContainer/StatusLabel.text = "You got hit for " + str(Actor.DMG) + " DMG!"
-							$NotificationTimer.start()
+							statusLabel.text = "You got hit for " + str(Actor.DMG) + " DMG!"
+							notiTimer.start()
 							break
 					targetIndex += 1
 				pass
@@ -318,8 +495,8 @@ func _handle_interaction(type, loc, array):
 		I.Type = "door"
 		player.Inv.append(I)
 		print(player.Inv)
-		$VSplitContainer/StatusLabel.text = "Grabbed a " + I.Type + " key."
-		$NotificationTimer.start()
+		statusLabel.text = "Grabbed a " + I.Type + " key."
+		notiTimer.start()
 	elif type == "D":
 		var result = _find_and_use_item("Y")
 		if result:
@@ -336,8 +513,8 @@ func _handle_interaction(type, loc, array):
 						player.Inv.append(item)
 						T += item.Char
 				print(player.Inv)
-				$VSplitContainer/StatusLabel.text = T
-				$NotificationTimer.start()
+				statusLabel.text = T
+				notiTimer.start()
 				corpses.remove(bodyIndex)
 			bodyIndex += 1
 	elif type in ENTITIES:
@@ -374,8 +551,8 @@ func _handle_damage_from_player(targetChar, targetLoc) -> bool:
 	for actor in actors:
 		if actor.Char == targetChar and actor.Loc == targetLoc:
 			actor.HP -= DMG
-			$VSplitContainer/StatusLabel.text = "You deal " + str(DMG) + " DMG to " + str(targetChar)
-			$NotificationTimer.start()
+			statusLabel.text = "You deal " + str(DMG) + " DMG to " + str(targetChar)
+			notiTimer.start()
 			if actor.HP < 1:
 				return true
 			break
@@ -414,6 +591,9 @@ func _files_dropped(files, screen):
 		print("Can't enter, player exited.")
 		return
 	for file in files:
+		if (fileIndex + currentRoom) > 9:
+			print("Thaz alotta files!")
+			return
 #		var Bool = false
 		if file.get_extension() != extensions:
 			continue
@@ -424,10 +604,18 @@ func _files_dropped(files, screen):
 		var data = ""
 		var index = 1
 		levelLabel.text = ""
+		var textLength = 0
+		var ifFailed = false
 		while not f.eof_reached():
 			if index > 6:
 				break
 			var line = f.get_line()
+			if index == 1:
+				textLength = line.length()
+			else:
+				if line.length() != textLength:
+					ifFailed = true
+					break
 			print(line + str(index))
 			if index < 6:
 				line += "\n"
@@ -437,6 +625,8 @@ func _files_dropped(files, screen):
 #				levelLabel.text += "\n"
 			index += 1
 		f.close()
+		if ifFailed:
+			continue
 		print(data)
 		if fileIndex == 0 and levelChange:
 			Rooms.append(data)
@@ -453,6 +643,7 @@ func _files_dropped(files, screen):
 			print(Rooms)
 		fileIndex += 1
 		pass
+#	save_game(autosaveLoc)
 
 # Call when array has that many indexed of rooms
 func _change_level():
@@ -466,7 +657,9 @@ func _change_level():
 	else:
 		store = Rooms[currentRoom]
 		
+	save_game(autosaveLoc)
 	game_array = _get_text_as_array(store)
+	corpses.clear()
 	actors.clear()
 	_actors_init(game_array)
 	_display_array(game_array)
@@ -527,4 +720,13 @@ func _status_bar_update():
 
 
 func _on_NotificationTimer_timeout():
-	_status_bar_update()
+	match notificationType:
+		"status":
+			_status_bar_update()
+		"level":
+			_display_array(game_array)
+			notificationType = "status"
+		"both":
+			_status_bar_update()
+			_display_array(game_array)
+			notificationType = "status"

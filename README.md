@@ -4,17 +4,20 @@
 
 ![Banner Fourth Version](.//v0.5-alpha-screen3.png)
 
+## Current Version v0.6.0-alpha
+Saving and loading is now in! I hope this adds more accessibility!
+
 ## Made For
 [r/roguelikedev](https://www.reddit.com/r/roguelikedev/)'s 2021 Run of the [Complete Roguelike Tutorial](http://rogueliketutorials.com/)
 
 ## Project Goal
 Make a 'moddable' roguelike in Godot.
 
+## Making a Map
+For a map to be accepted, it must be the same width in characters (subject to change.) Important characters are '#' for walls, '@' for you player, and '>' to proceed to next level. More characters are hoped to be added later. Currently 'Y', 'D', 'r', and 'X' all have a use.
+
 ## How to Contribute
 This is mainly a personal learning project, so create issues, enter discussion, or make your own fork.
-
-## Current Version v0.5.0-alpha
-This update focused on getting items up to snuff. Now there is more than a key!
 
 ### Links
 [Itch.io](https://kaizarnike.itch.io/defeating-user-built-dungeon) |
