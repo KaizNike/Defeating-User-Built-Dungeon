@@ -2,10 +2,10 @@
  Godot text-based roguelike where you supply the levels.
  [Play on itch](https://kaizarnike.itch.io/defeating-user-built-dungeon)
 
-![Banner Fourth Version](.//v0.5-alpha-screen3.png)
+![Banner Fifth Version, A Dungeon with many rats](.//v0.7-alpha-screen4.png)
 
-## Current Version v0.6.0-alpha
-Saving and loading is now in! I hope this adds more accessibility!
+## Current Version v0.7.0-alpha
+Added minor functionslity of visible inventory.
 
 ## Made For
 [r/roguelikedev](https://www.reddit.com/r/roguelikedev/)'s 2021 Run of the [Complete Roguelike Tutorial](http://rogueliketutorials.com/)

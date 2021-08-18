@@ -1,8 +1,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 6, 0, "-alpha"]
-# Latest - Week 6 + 7 Update - Saving + Loading + Reloading
+var version = [0, 7, 0, "-alpha"]
+# Latest - Week 6 + 7 Update - Inventory Update
 
 # Future ideas - Friendly or neutral mobs
 
@@ -43,18 +43,18 @@ const RoomsStore = ["""
 
 var game_array = []
 
-# ">" - Down Stair, "<" - Up Stair, "Y" - Key, "D" - Door, "K" - Skeleton Key, "%" - Body, "+" - Healing Potion
-const INTERACTS = [">", "<", "Y", "D", "K", "%", "+"]
+# ">" - Down Stair, "<" - Up Stair, "Y" - Door Key, "y" - Chest Key, "D" - Door, "K" - Skeleton Key, "%" - Body, "+" - Healing Potion, "c" - Chest
+const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c"]
 # "#" - Wall, "D" - Locked Door, "X" - Old Wall
 const COLLIDES = ["#", "D", "X"]
-# "r" - Rat, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player, "x" - Crate
-const ENTITIES = ["r", "k", "g", "L", "@", "x"]
+# "r" - Rat, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player, "x" - Crate, "c" - Chest
+const ENTITIES = ["r", "k", "g", "L", "@", "x", "c"]
 # "T" - Sword, "S" - Whip, "Z" - Scroll
 const WEAPONS = ["T", "S", "Z"]
 # "O" - Shield, "P" - Platemail, "B" - Boots
 const ARMORS = ["O", "P", "B"]
 
-var item = {"Char": "", "Uses": 1, "Type": "normal"}
+var item = {"Char": "", "Uses": 1, "Type": "Normal"}
 var scrollUse = ""
 
 var actors = []
@@ -123,18 +123,19 @@ func _being_init(Loc, Char):
 		Being.Speed = 0
 		Being.Behav = "Still"
 		Being.bodyDesc = "crate"
-		var containing = item.duplicate(false)
-		var rand = randi()%2
-		match rand:
-			0:
-				containing.Char = "+"
-				containing.Type = "lesser"
-				containing.Uses = 2
-			1:
-				containing.Char = "Z"
-				containing.Type = "lightning"
-				containing.Uses = 1
-		Being.Inv.append(containing)
+		_spawn_item_inside_container(Being.Inv,Char)
+#		var containing = item.duplicate(false)
+#		var rand = randi()%2
+#		match rand:
+#			0:
+#				containing.Char = "+"
+#				containing.Type = "Lesser"
+#				containing.Uses = 2
+#			1:
+#				containing.Char = "Z"
+#				containing.Type = "Lightning"
+#				containing.Uses = 1
+#		Being.Inv.append(containing)
 	else:
 		return
 	## Should happen if in if elif group
@@ -205,15 +206,17 @@ func _input(event):
 		statusLabel.text = "Didn't restart."
 		notiTimer.start()
 		return
+	elif event.is_action_pressed("inventory"):
+		_show_inv()
 	elif event.is_action_pressed("heal"):
-		if _find_and_use_item("+"):
+		if _find_and_use_item("+", player):
 			statusLabel.text = "You heal to " + str(player.HP) + "."
 		else:
 			statusLabel.text = "No healing in inventory!"
 		notiTimer.start()
 	elif event.is_action_pressed("use_scroll"):
-		if _find_and_use_item("Z"):
-			if scrollUse == "lightning":
+		if _find_and_use_item("Z", "player"):
+			if scrollUse == "Lightning":
 				var targetActor = {}
 				var closestDistance = 100
 				var actorIndex = 0
@@ -373,7 +376,7 @@ func _process_turn(array, dir):
 			if currentRoom == -1:
 				levelLabel.text += "\nYou leave the dungeon."
 
-
+# Edits the array and returns to _move_actors(), handles player centered actions
 func _move_player(array, dir, actor):
 	if dir == Vector2.ZERO:
 		print("You wait a minute.")
@@ -392,7 +395,7 @@ func _move_player(array, dir, actor):
 	var Dest = array[Loc.y][Loc.x]
 	var a = array
 	if Dest in INTERACTS or Dest in ENTITIES:
-		a = _handle_interaction(Dest, Loc, array)
+		a = _handle_player_interaction(Dest, Loc, array)
 	if Dest in COLLIDES or Dest in ENTITIES:
 		return array
 	
@@ -448,7 +451,10 @@ func _move_actors(array, dir):
 							break
 					targetIndex += 1
 				pass
-			if Dest in COLLIDES or Dest in ENTITIES or Dest in INTERACTS:
+			if Dest in INTERACTS:
+				if _handle_actor_interaction(Actor,Dest):
+					continue
+			if Dest in COLLIDES or Dest in ENTITIES:
 				continue
 			else:
 				a[Actor.Loc.y][Actor.Loc.x] = " "
@@ -479,7 +485,21 @@ func _find_player(array):
 func get_distance(selfLoc:Vector2, targetLoc:Vector2):
 	return sqrt(pow(selfLoc.x-targetLoc.x, 2) + pow(selfLoc.y-targetLoc.y,2))
 
-func _handle_interaction(type, loc, array):
+func _handle_actor_interaction(actor, type) -> bool:
+	if actor.Char == "r":
+		if type == "Y":
+			var I = item.duplicate(false)
+			I.Char = "Y"
+			I.type = "door"
+			actor.Inv.append(I)
+			return false
+		else:
+			return true
+	else:
+		return true
+
+
+func _handle_player_interaction(type, loc, array):
 	var a = array
 	if type == ">":
 		levelChange = true
@@ -497,8 +517,16 @@ func _handle_interaction(type, loc, array):
 		print(player.Inv)
 		statusLabel.text = "Grabbed a " + I.Type + " key."
 		notiTimer.start()
+	elif type == "y":
+		var I = item.duplicate(false)
+		I.Char = "y"
+		I.Type = "chest"
+		player.Inv.append(I)
+		print(player.Inv)
+		statusLabel.text = "Grabbed a " + I.Type + " key."
+		notiTimer.start()
 	elif type == "D":
-		var result = _find_and_use_item("Y")
+		var result = _find_and_use_item("Y", player)
 		if result:
 			a[loc.y][loc.x] = " "
 	elif type == "%":
@@ -526,6 +554,35 @@ func _handle_interaction(type, loc, array):
 	return a
 	pass
 
+
+func _show_inv():
+	var text = ""
+	var itemIndex = 0
+	for Item in player.Inv:
+		if itemIndex > 5:
+			break
+		var name = _get_item_name(Item.Char, Item.Type)
+		if not name:
+			continue
+		var line = name + " Uses: " + str(Item.Uses)
+		text += line
+		if itemIndex < 5:
+			text += "\n"
+	if not text:
+		text = "Your inventory is empty!"
+	levelLabel.text = text
+	waiting = true
+		
+
+func _get_item_name(Char, Type) -> String:
+	match Char:
+		"Y":
+			return Type + " Key"
+		"+":
+			return Type + " Heal Pot"
+		"Z":
+			return "Scroll of " + Type
+	return ""
 
 func _add_corpse(targetActor):
 	var actorIndex = 0
@@ -559,23 +616,22 @@ func _handle_damage_from_player(targetChar, targetLoc) -> bool:
 	return false
 
 
-func _find_and_use_item(Item):
+func _find_and_use_item(Item, Actor):
 	var spotIndex = 0
-	for spot in player.Inv:
+	for spot in Actor.Inv:
 		if typeof(spot) == 18:
 			if "Char" in spot and "Uses" in spot:
 				if spot.Char == Item:
 #					print("OK!")
 					if Item == "+":
-						if spot.Type == "lesser":
-							player.HP += 1
-							print(player.HP)
+						if spot.Type == "Lesser":
+							Actor.HP += 1
+							print(Actor.Char + " healed to: " + str(Actor.HP))
 					elif Item == "Z":
 						scrollUse = spot.Type
 					spot.Uses -= 1
 					if spot.Uses == 0:
-						player.Inv.remove(spotIndex)
-						print(player.Inv)
+						Actor.Inv.remove(spotIndex)
 					return true
 					
 					
@@ -583,6 +639,25 @@ func _find_and_use_item(Item):
 	# If item not found
 	return false
 	
+
+func _spawn_item_inside_container(containerInv : Array, containerType):
+	var Item = item.duplicate(true)
+	if containerType == "x":
+		var rand = randi()%2
+		match rand:
+			0:
+				Item.Char = "+"
+				Item.Type = "Lesser"
+				Item.Uses = 2
+			1:
+				Item.Char = "Z"
+				Item.Type = "Lightning"
+				Item.Uses = 1
+	# finish
+	if Item.Char == "":
+		return
+	containerInv.append(Item)
+
 
 func _files_dropped(files, screen):
 	var fileIndex = 0
