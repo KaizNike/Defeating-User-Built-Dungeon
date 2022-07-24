@@ -1,10 +1,10 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 7, 0, "-alpha"]
-# Latest - Week 6 + 7 Update - Inventory Update
+var version = [0, 8, 0, "-alpha"]
+# Latest - The Return, A Year Later - Inventory Upgrade + Level Adding Robustness
 
-# Future ideas - Friendly or neutral mobs
+# Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
 onready var levelLabel = $VSplitContainer/LevelLabel
 onready var statusLabel = $VSplitContainer/StatusLabel
@@ -17,6 +17,9 @@ var levelDiff = 0
 var resetting = false
 var restarting = false
 var isDarkMode = false
+var pageSelect = false
+var currentPageShown = 1
+var numOfPages = 0
 var notificationType = "status"
 
 var save_vars = ["Player", "CurrentRoom", "Rooms"]
@@ -49,10 +52,12 @@ const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c"]
 const COLLIDES = ["#", "D", "X"]
 # "r" - Rat, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player, "x" - Crate, "c" - Chest
 const ENTITIES = ["r", "k", "g", "L", "@", "x", "c"]
-# "T" - Sword, "S" - Whip, "Z" - Scroll
-const WEAPONS = ["T", "S", "Z"]
+# "T" - Sword, "S" - Whip, "Z" - Scroll, "V" - Shovel, "B" - Bow, "E" - Trident
+const WEAPONS = ["T", "S", "Z", "V", "B", "E"]
 # "O" - Shield, "P" - Platemail, "B" - Boots
 const ARMORS = ["O", "P", "B"]
+# "-" - Arrow
+const PROJECTILES = ["-"]
 
 var item = {"Char": "", "Uses": 1, "Type": "Normal"}
 var scrollUse = ""
@@ -64,6 +69,9 @@ var playerOrig = {}
 
 var corpses = []
 var body = {"Loc": Vector2.ZERO, "Inv": [], "Desc": ""}
+
+var projectiles = []
+var projectile = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "MoveFoward", "Relation": "Dangerous"}
 
 func _ready():
 	randomize()
@@ -96,7 +104,7 @@ class SortingActors:
 	
 func _actors_init(array):
 	for y in range(array.size()):
-		for x in range(array[0].size()):
+		for x in range(array[y].size()):
 			if array[y][x] in ENTITIES:
 				_being_init(Vector2(x,y),array[y][x])
 	if actors.size() > 1:
@@ -146,12 +154,41 @@ func _being_init(Loc, Char):
 #	print(actors)
 	
 func _input(event):
+	if event is InputEventMouseMotion:
+		return
+	if (waiting and pageSelect) and (event.is_action_pressed("ui_page_down") or event.is_action_pressed("ui_page_up")):
+		if event.is_action_pressed("ui_page_down"):
+			if currentPageShown == numOfPages:
+				_show_inv(currentPageShown)
+			else:
+				_show_inv(currentPageShown + 1)
+			return
+		if event.is_action_pressed("ui_page_up"):
+			if currentPageShown == 1:
+				_show_inv(1)
+			else:
+				_show_inv(currentPageShown - 1)
+		return
 #	if event is InputEventKey and event.scancode == KEY_SHIFT:
 #		print("shift")
+#	print(_get_text_as_array(OS.clipboard))
 	if waiting and event.is_pressed():
+		pageSelect = false
 		waiting = false
 		_display_array(game_array)
 		_status_bar_update()
+		return
+	elif event.is_action_pressed("paste") and OS.clipboard:
+		var take = OS.clipboard
+		take = _clean_pasted_text(take)
+		print(take)
+		if not take:
+			return
+		if not levelChange:
+			Rooms[currentRoom] = take
+		else:
+			Rooms.append(take)
+		_change_level()
 		return
 	if event.is_action_pressed("version_display"):
 		statusLabel.text = "v " + str(version[0]) + "." + str(version[1]) + "." + str(version[2]) + version[3]
@@ -207,7 +244,7 @@ func _input(event):
 		notiTimer.start()
 		return
 	elif event.is_action_pressed("inventory"):
-		_show_inv()
+		_show_inv(1)
 	elif event.is_action_pressed("heal"):
 		if _find_and_use_item("+", player):
 			statusLabel.text = "You heal to " + str(player.HP) + "."
@@ -215,7 +252,7 @@ func _input(event):
 			statusLabel.text = "No healing in inventory!"
 		notiTimer.start()
 	elif event.is_action_pressed("use_scroll"):
-		if _find_and_use_item("Z", "player"):
+		if _find_and_use_item("Z", player):
 			if scrollUse == "Lightning":
 				var targetActor = {}
 				var closestDistance = 100
@@ -325,14 +362,14 @@ func delete_save(loc) -> bool:
 func _show_save_deletion() -> void:
 #	var text = ""
 	var store = ""
-	for x in range(10):
+	for x in range(24):
 		var text = ""
 		for y in range(6):
 			text += store
 			if y < 6:
 				text += "\n"
 		levelLabel.text = text
-		yield(get_tree().create_timer(0.2),"timeout")
+		yield(get_tree().create_timer(0.1),"timeout")
 		store += "X"
 	return
 	
@@ -419,6 +456,8 @@ func _move_actors(array, dir):
 				return a
 		elif Actor.Behav == "Still":
 			continue
+		elif Actor.Behav == "Hunter":
+			continue
 		elif Actor.Behav == "Random":
 			var x = randi()%3-1
 			var y = 0
@@ -428,8 +467,8 @@ func _move_actors(array, dir):
 			print(actorDir)
 #					var actorDir = Vector2(-1,0)
 			var actorLoc = Actor.Loc + actorDir
-#			if actorLoc.y > (a.size()-1) or actorLoc.x > (a.size()-1):
-#				continue
+			if actorLoc.x < 0 or actorLoc.x > array[0].size() - 1 or actorLoc.y < 0 or actorLoc.y > array.size() - 1:
+				continue
 			var Dest = a[actorLoc.y][actorLoc.x]
 			if Dest in ENTITIES:
 				var targetIndex = 0
@@ -554,20 +593,40 @@ func _handle_player_interaction(type, loc, array):
 	return a
 	pass
 
-
-func _show_inv():
-	var text = ""
-	var itemIndex = 0
+func _show_inv(shownPage):
+	currentPageShown = shownPage
+	var items = 0
 	for Item in player.Inv:
-		if itemIndex > 5:
+		items += 1
+	if items > 5:
+		var moreText = ""
+		var pages = items / 5
+		if items % 5 != 0:
+			pages += 1
+		pageSelect = true
+		if shownPage == pages:
+			moreText = " Page Up for more."
+		else:
+			moreText = " Page Down for more."
+		statusLabel.text = str(currentPageShown) + "/" + str(pages) + moreText
+		numOfPages = pages
+	var text = ""
+	var itemIndex = 1
+	print((shownPage * 5) - 5)
+	for Item in player.Inv:
+		print(itemIndex)
+		if itemIndex < (shownPage * 5) - 5:
+			itemIndex += 1
+			continue
+		if itemIndex > (shownPage * 5):
 			break
 		var name = _get_item_name(Item.Char, Item.Type)
 		if not name:
 			continue
 		var line = name + " Uses: " + str(Item.Uses)
 		text += line
-		if itemIndex < 5:
-			text += "\n"
+		text += "\n"
+		itemIndex += 1
 	if not text:
 		text = "Your inventory is empty!"
 	levelLabel.text = text
@@ -658,7 +717,6 @@ func _spawn_item_inside_container(containerInv : Array, containerType):
 		return
 	containerInv.append(Item)
 
-
 func _files_dropped(files, screen):
 	var fileIndex = 0
 	var extensions = "txt"
@@ -680,28 +738,46 @@ func _files_dropped(files, screen):
 		var index = 1
 		levelLabel.text = ""
 		var textLength = 0
+		var longestTextLength = 0
 		var ifFailed = false
+		while not f.eof_reached():
+			if index > 6:
+				$VSplitContainer/StatusLabel.text = "Max Rows: 6."
+				$NotificationTimer.start()
+				break
+			var line = f.get_line()
+			if line.length() > 24:
+				$VSplitContainer/StatusLabel.text = "Max Columns: " + str(line.length()) + "/24."
+				$NotificationTimer.start()
+				ifFailed = true
+				break
+			if index == 1:
+				longestTextLength = line.length()
+			else:
+				if line.length() > longestTextLength:
+					longestTextLength = line.length()
+			index += 1
+		f.close()
+		if ifFailed:
+			continue
+		f = File.new()
+		index = 1
+		f.open(file,File.READ)
 		while not f.eof_reached():
 			if index > 6:
 				break
 			var line = f.get_line()
-			if index == 1:
-				textLength = line.length()
-			else:
-				if line.length() != textLength:
-					ifFailed = true
-					break
-			print(line + str(index))
-			if index < 6:
-				line += "\n"
+			if line.length() < longestTextLength:
+				for space in range(longestTextLength - line.length()):
+					line += " "
+			print(str(index) + ": " + line)
+			line += "\n"
 			data += line
 #			levelLabel.text += line
 #			if index < 6:
 #				levelLabel.text += "\n"
 			index += 1
 		f.close()
-		if ifFailed:
-			continue
 		print(data)
 		if fileIndex == 0 and levelChange:
 			Rooms.append(data)
@@ -729,6 +805,10 @@ func _change_level():
 	var store = ""
 	if currentRoom == 9:
 		store = RoomsStore[1]
+		if Rooms.size() > 9:
+			Rooms[9] = store
+		else:
+			Rooms.append(store)
 	else:
 		store = Rooms[currentRoom]
 		
@@ -738,12 +818,17 @@ func _change_level():
 	actors.clear()
 	_actors_init(game_array)
 	_display_array(game_array)
-	_status_bar_update()
+	if $NotificationTimer.is_stopped():
+		_status_bar_update()
 	pass
 
 func _get_text_as_array(text : String):
 	var a = []
 	var c = text.split("\n", false)
+	var longestTextLength = 0
+	for line in c:
+		if line.length() > longestTextLength:
+			longestTextLength = line.length()
 #	print(c)
 	for line in c:
 		var A = []
@@ -752,6 +837,9 @@ func _get_text_as_array(text : String):
 		for Char in line:
 			A.append(Char)
 #			print(Char)
+		if longestTextLength > line.length():
+			for spot in range(longestTextLength - line.length()):
+				A.append(" ")
 		a.append(A)
 #	print(a)
 	return a
@@ -792,7 +880,31 @@ func _status_bar_update():
 		text += " "
 		statusLabel.text = text
 	
-
+func _clean_pasted_text(text:String) -> String:
+	var c = text.split("\r\n", false)
+	var longestTextLength = 0
+	var index = 1
+	var returnValue = ""
+	for line in c:
+		if line.length() > longestTextLength:
+			longestTextLength = line.length()
+			if longestTextLength > 24:
+				$VSplitContainer/StatusLabel.text = "Max Columns: " + str(longestTextLength) + "/24"
+				$NotificationTimer.start()
+				return ""
+	for line in c:
+		if line.length() < longestTextLength:
+			for spot in range(longestTextLength - line.length()):
+				line += " "
+		if index < 7:
+			returnValue += line + "\n"
+		else:
+			$VSplitContainer/StatusLabel.text = "Max Rows: 6"
+			$NotificationTimer.start()
+			break
+		index += 1
+	
+	return returnValue
 
 func _on_NotificationTimer_timeout():
 	match notificationType:
