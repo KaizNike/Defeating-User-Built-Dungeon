@@ -46,11 +46,11 @@ const RoomsStore = ["""
 
 var game_array = []
 
-# ">" - Down Stair, "<" - Up Stair, "Y" - Door Key, "y" - Chest Key, "D" - Door, "K" - Skeleton Key, "%" - Body, "+" - Healing Potion, "c" - Chest
+# ">" - Down Stair*, "<" - Up Stair*, "Y" - Door Key*, "y" - Chest Key*, "D" - Door*, "K" - Skeleton Key*, "%" - Body*, "+" - Healing Potion*, "c" - Chest
 const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c"]
-# "#" - Wall, "D" - Locked Door, "X" - Old Wall
+# "#" - Wall*, "D" - Locked Door*, "X" - Old Wall*
 const COLLIDES = ["#", "D", "X"]
-# "r" - Rat, "n" - DiNgo, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player, "x" - Crate, "c" - Chest
+# "r" - Rat*, "n" - DiNgo*, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player*, "x" - Crate*, "c" - Chest
 const ENTITIES = ["r", "n", "k", "g", "L", "@", "x", "c"]
 # "T" - Sword, "S" - Whip, "Z" - Scroll, "V" - Shovel (tunnel walls, 2 dmg), "B" - Bow (range 6, 1dmg), "E" - Trident
 const WEAPONS = ["T", "S", "Z", "V", "B", "E"]
