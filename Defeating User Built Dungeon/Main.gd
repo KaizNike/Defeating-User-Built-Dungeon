@@ -1,8 +1,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 8, 0, "-alpha"]
-# Latest - The Return, A Year Later - Inventory Upgrade + Level Adding Robustness
+var version = [0, 9, 0, "-alpha"]
+# Dingos and Room Retention
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -29,12 +29,12 @@ export (Script) var game_save_class
 var Rooms = []
 
 const RoomsStore = ["""
-############
-#@        x#
-#     rr  Y#
-##D#########
-#<r       >#
-############
+#############
+#@         x#
+#     rr n Y#
+##D##########
+#<r        >#
+#############
 """,
 """
 #############
@@ -50,9 +50,9 @@ var game_array = []
 const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c"]
 # "#" - Wall, "D" - Locked Door, "X" - Old Wall
 const COLLIDES = ["#", "D", "X"]
-# "r" - Rat, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player, "x" - Crate, "c" - Chest
-const ENTITIES = ["r", "k", "g", "L", "@", "x", "c"]
-# "T" - Sword, "S" - Whip, "Z" - Scroll, "V" - Shovel, "B" - Bow, "E" - Trident
+# "r" - Rat, "n" - DiNgo, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player, "x" - Crate, "c" - Chest
+const ENTITIES = ["r", "n", "k", "g", "L", "@", "x", "c"]
+# "T" - Sword, "S" - Whip, "Z" - Scroll, "V" - Shovel (tunnel walls, 2 dmg), "B" - Bow (range 6, 1dmg), "E" - Trident
 const WEAPONS = ["T", "S", "Z", "V", "B", "E"]
 # "O" - Shield, "P" - Platemail, "B" - Boots
 const ARMORS = ["O", "P", "B"]
@@ -120,6 +120,13 @@ func _being_init(Loc, Char):
 		Being.DMG = 1
 		Being.bodyDesc = "rat"
 		Being.Relation = "Hostile"
+	elif Char == "n":
+		Being.Speed = 3
+		Being.Turns = 2
+		Being.DMG = 2
+		Being.bodyDesc = "dingo"
+		Being.Behav = "Hungry"
+		Being.Relation = "Dingos"
 	elif Char == "@":
 		player.Loc = Loc
 		actors.append(player)
@@ -132,6 +139,15 @@ func _being_init(Loc, Char):
 		Being.Behav = "Still"
 		Being.bodyDesc = "crate"
 		_spawn_item_inside_container(Being.Inv,Char)
+	elif Char == "g":
+		Being.HP = 2
+		Being.Turns = 1
+		Being.Speed = 1
+		Being.DMG = 0
+		Being.Behav = "HunterGather"
+		Being.bodydesc = "goblin"
+		Being.Relation = "Goblin"
+		_spawn_item_inside_container(Being.Inv, Char)
 #		var containing = item.duplicate(false)
 #		var rand = randi()%2
 #		match rand:
@@ -458,6 +474,67 @@ func _move_actors(array, dir):
 			continue
 		elif Actor.Behav == "Hunter":
 			continue
+		elif Actor.Behav == "Hungry":
+			var actorDir = Vector2.ZERO
+			print("A Hungry One At: " + str(Actor.Loc))
+			print(corpses.size())
+			if corpses.size() > 0:
+				print("Hunger for corpses.")
+				var distance = 100
+				var finalCorpse = {}
+				for corpse in corpses:
+					var checkDistance = get_distance(Actor.Loc,corpse.Loc)
+					if checkDistance < distance:
+						distance = checkDistance
+						finalCorpse = corpse
+				actorDir = Vector2(clamp(finalCorpse.Loc.x-Actor.Loc.x,-1,1),clamp(finalCorpse.Loc.y-Actor.Loc.y,-1,1))
+			else:
+				print("Hunger for actors.")
+				var distance = 100
+				var finalActor = {}
+				for actor in actors:
+					if actor.Relation != "Dingos":
+						var checkDistance = get_distance(Actor.Loc,actor.Loc)
+						if checkDistance < distance:
+							distance = checkDistance
+							finalActor = actor
+				print(finalActor.Loc)
+				print(Actor.Loc)
+				actorDir = Vector2(clamp(finalActor.Loc.x-Actor.Loc.x,-1,1), clamp(finalActor.Loc.y-Actor.Loc.y,-1,1))
+				print(actorDir)
+			var actorLoc = Actor.Loc + actorDir
+			print("Hungry One To: " + str(actorLoc))
+			var Dest = a[actorLoc.y][actorLoc.x]
+			if Dest in ENTITIES:
+				var targetIndex = 0
+				for targetActor in actors:
+					if targetActor.Char == Actor.Char:
+						targetIndex += 1
+						continue
+					if targetActor.Char == Dest and targetActor.Loc == actorLoc:
+						targetActor.HP -= Actor.DMG
+						if targetActor.HP < 1:
+							if targetActor.Char == "@":
+								statusLabel.text = "You are slain."
+							_add_corpse(targetActor)
+#							actors.remove(targetIndex)
+							a[actorLoc.y][actorLoc.x] = "%"
+							break
+						if targetActor.Char == "@":
+							statusLabel.text = "You got hit for " + str(Actor.DMG) + " DMG!"
+							notiTimer.start()
+							break
+					targetIndex += 1
+			if Dest in INTERACTS:
+				if _handle_actor_interaction(Actor,Dest,actorLoc):
+					continue
+			if Dest in COLLIDES or Dest in ENTITIES:
+				continue
+			else:
+				a[Actor.Loc.y][Actor.Loc.x] = " "
+				a[actorLoc.y][actorLoc.x] = Actor.Char
+				Actor.Loc = actorLoc
+				Actor.Turns -= 1
 		elif Actor.Behav == "Random":
 			var x = randi()%3-1
 			var y = 0
@@ -481,7 +558,8 @@ func _move_actors(array, dir):
 						if targetActor.HP < 1:
 							if targetActor.Char == "@":
 								statusLabel.text = "You are slain."
-							actors.remove(targetIndex)
+							_add_corpse(targetActor)
+#							actors.remove(targetIndex)
 							a[actorLoc.y][actorLoc.x] = "%"
 							break
 						if targetActor.Char == "@":
@@ -491,7 +569,7 @@ func _move_actors(array, dir):
 					targetIndex += 1
 				pass
 			if Dest in INTERACTS:
-				if _handle_actor_interaction(Actor,Dest):
+				if _handle_actor_interaction(Actor,Dest, actorLoc):
 					continue
 			if Dest in COLLIDES or Dest in ENTITIES:
 				continue
@@ -524,7 +602,7 @@ func _find_player(array):
 func get_distance(selfLoc:Vector2, targetLoc:Vector2):
 	return sqrt(pow(selfLoc.x-targetLoc.x, 2) + pow(selfLoc.y-targetLoc.y,2))
 
-func _handle_actor_interaction(actor, type) -> bool:
+func _handle_actor_interaction(actor, type, loc) -> bool:
 	if actor.Char == "r":
 		if type == "Y":
 			var I = item.duplicate(false)
@@ -532,6 +610,17 @@ func _handle_actor_interaction(actor, type) -> bool:
 			I.type = "door"
 			actor.Inv.append(I)
 			return false
+		else:
+			return true
+	elif actor.Char == "n":
+		if type == "%":
+			for corpse in corpses:
+				if loc == corpse.Loc:
+					for item in corpse.Inv:
+						actor.Inv.append(item)
+					actor.Behav = "Random"
+					return false
+			return true
 		else:
 			return true
 	else:
@@ -543,10 +632,12 @@ func _handle_player_interaction(type, loc, array):
 	if type == ">":
 		levelChange = true
 		levelDiff = 1
+		Rooms[currentRoom] = $VSplitContainer/LevelLabel.text
 		currentRoom += 1
 	elif type == "<":
 		levelChange = true
 		levelDiff = -1
+		Rooms[currentRoom] = $VSplitContainer/LevelLabel.text
 		currentRoom -= 1
 	elif type == "Y":
 		var I = item.duplicate(false)
@@ -713,6 +804,16 @@ func _spawn_item_inside_container(containerInv : Array, containerType):
 				Item.Type = "Lightning"
 				Item.Uses = 1
 	# finish
+	elif containerType == "g":
+		var rand = randi()%100
+		if rand < 9:
+			Item.Char = "V"
+			Item.Type = "Digging"
+			Item.Uses = 11
+		if rand > 90:
+			Item.Chat = "B"
+			Item.Type = "Hunting"
+			Item.Uses = 6
 	if Item.Char == "":
 		return
 	containerInv.append(Item)
@@ -812,6 +913,7 @@ func _change_level():
 	else:
 		store = Rooms[currentRoom]
 		
+	
 	save_game(autosaveLoc)
 	game_array = _get_text_as_array(store)
 	corpses.clear()
@@ -845,6 +947,16 @@ func _get_text_as_array(text : String):
 	return a
 #	pass
 
+
+#func _get_array_as_text(text:String) -> Array:
+#	var array = []
+#	var textSplit = text.split("\n")
+#	for line in textSplit:
+#		var lineInArray = []
+#		for Char in line:
+#			lineInArray.append(Char)
+#		array.append(lineInArray)
+#	return array
 
 func _display_array(array : Array):
 	var index = 1
