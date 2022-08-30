@@ -111,60 +111,36 @@ func _actors_init(array):
 		actors.sort_custom(SortingActors, "sort_descending")
 	print(actors)
 	
+var BEINGS = {"Rat": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "r", "Behav": "Random", "Inv": [], "bodyDesc": "rat", "Relation": "Hostile"},
+"Dingo": {"Speed": 3, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "n", "Behav": "Hungry", "Inv": [], "bodyDesc": "dingo", "Relation": "Dingos"},
+"Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
+"Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
+"Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"}}
+	
 # If found in entities, add to array
 func _being_init(Loc, Char):
 	var Being = being.duplicate(true)
 	if Char == "r":
-		Being.Speed = 2
-		Being.Turns = 2
-		Being.DMG = 1
-		Being.bodyDesc = "rat"
-		Being.Relation = "Hostile"
+		Being = BEINGS.Rat
 	elif Char == "n":
-		Being.Speed = 3
-		Being.Turns = 2
-		Being.DMG = 2
-		Being.bodyDesc = "dingo"
-		Being.Behav = "Hungry"
-		Being.Relation = "Dingos"
+		Being = BEINGS.Dingo
 	elif Char == "@":
 		player.Loc = Loc
 		actors.append(player)
 		print(player)
 		return
 	elif Char == "x":
-		Being.HP = 3
-		Being.Turns = 0
-		Being.Speed = 0
-		Being.Behav = "Still"
-		Being.bodyDesc = "crate"
-		_spawn_item_inside_container(Being.Inv,Char)
+		Being = BEINGS.Crate
 	elif Char == "g":
-		Being.HP = 2
-		Being.Turns = 1
-		Being.Speed = 1
-		Being.DMG = 0
-		Being.Behav = "HunterGather"
-		Being.bodydesc = "goblin"
-		Being.Relation = "Goblin"
-		_spawn_item_inside_container(Being.Inv, Char)
-#		var containing = item.duplicate(false)
-#		var rand = randi()%2
-#		match rand:
-#			0:
-#				containing.Char = "+"
-#				containing.Type = "Lesser"
-#				containing.Uses = 2
-#			1:
-#				containing.Char = "Z"
-#				containing.Type = "Lightning"
-#				containing.Uses = 1
-#		Being.Inv.append(containing)
+		Being = BEINGS.Goblin
+	elif Char == "k":
+		Being = BEINGS.Kobold
 	else:
 		return
 	## Should happen if in if elif group
 	Being.Loc = Loc
 	Being.Char = Char
+	_spawn_item_inside_container(Being.Inv,Char)
 	print(Being)
 	actors.append(Being)
 #	print(actors)
@@ -806,13 +782,26 @@ func _spawn_item_inside_container(containerInv : Array, containerType):
 	# finish
 	elif containerType == "g":
 		var rand = randi()%100
+		if rand < 8:
+			Item.Char = "S"
+			Item.Uses = 25
+		if rand > 8 and rand < 18:
+			Item.Char = "B"
+			Item.Type = "Hunting"
+			Item.Uses = 8
+		if rand > 89:
+			Item.Char = "T"
+			Item.Type = "Short"
+			Item.Uses = 18
+	elif containerType == "k":
+		var rand = randi()%100
 		if rand < 9:
 			Item.Char = "V"
 			Item.Type = "Digging"
 			Item.Uses = 11
 		if rand > 90:
 			Item.Chat = "B"
-			Item.Type = "Hunting"
+			Item.Type = "Hunting Short"
 			Item.Uses = 6
 	if Item.Char == "":
 		return
