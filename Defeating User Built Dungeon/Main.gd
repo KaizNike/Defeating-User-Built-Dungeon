@@ -1,8 +1,9 @@
+# Warning: F You lose at X.
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 9, 1, "-alpha"]
-# Dingos and Room Retention (The Beings Patch)
+var version = [0, 9, 3, "-alpha"]
+# Lightning Scroll Targeting
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -31,7 +32,7 @@ var Rooms = []
 const RoomsStore = ["""
 #############
 #@         x#
-#   r  r n Y#
+#        n Y#
 ##D##########
 #<r        >#
 #############
@@ -52,14 +53,30 @@ const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c"]
 const COLLIDES = ["#", "D", "X"]
 # "r" - Rat*, "n" - DiNgo*, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player*, "x" - Crate*, "c" - Chest
 const ENTITIES = ["r", "n", "k", "g", "L", "@", "x", "c"]
+
+const ENTITIES_DEFINES = {
+"Rat": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "r", "Behav": "Random", "Inv": [], "bodyDesc": "rat", "Relation": "Rats"},
+"Dingo": {"Speed": 3, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "n", "Behav": "Hungry", "Inv": [], "bodyDesc": "dingo", "Relation": "Dingos"},
+"Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
+"Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
+"Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"}
+}
+
+const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold"]
+	
 # "T" - Sword, "S" - Whip, "Z" - Scroll, "V" - Shovel (tunnel walls, 2 dmg), "B" - Bow (range 6, 1dmg), "E" - Trident
 const WEAPONS = ["T", "S", "Z", "V", "B", "E"]
+
+#const WEAPONS_DEFINES = {
+#	"Sword": {"Char": "T", "Uses": 12, "Type": ""},
+#	"Whip": {"Char": "S", "Uses": 18}
+#}
 # "O" - Shield, "P" - Platemail, "B" - Boots
 const ARMORS = ["O", "P", "B"]
 # "-" - Arrow
 const PROJECTILES = ["-"]
 
-var item = {"Char": "", "Uses": 1, "Type": "Normal"}
+var item = {"Char": "", "Uses": 1, "Type": "Normal", "Value": 0}
 var scrollUse = ""
 
 var actors = []
@@ -111,30 +128,25 @@ func _actors_init(array):
 		actors.sort_custom(SortingActors, "sort_descending")
 	print(actors)
 	
-var BEINGS = {"Rat": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "r", "Behav": "Random", "Inv": [], "bodyDesc": "rat", "Relation": "Rats"},
-"Dingo": {"Speed": 3, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "n", "Behav": "Hungry", "Inv": [], "bodyDesc": "dingo", "Relation": "Dingos"},
-"Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
-"Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
-"Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"}}
-	
+
 # If found in entities, add to array
 func _being_init(Loc, Char):
 	var Being = being.duplicate(true)
 	if Char == "r":
-		Being = BEINGS.Rat.duplicate(true)
+		Being = ENTITIES_DEFINES.Rat.duplicate(true)
 	elif Char == "n":
-		Being = BEINGS.Dingo.duplicate(true)
+		Being = ENTITIES_DEFINES.Dingo.duplicate(true)
 	elif Char == "@":
 		player.Loc = Loc
 		actors.append(player)
 		print(player)
 		return
 	elif Char == "x":
-		Being = BEINGS.Crate.duplicate(true)
+		Being = ENTITIES_DEFINES.Crate.duplicate(true)
 	elif Char == "g":
-		Being = BEINGS.Goblin.duplicate(true)
+		Being = ENTITIES_DEFINES.Goblin.duplicate(true)
 	elif Char == "k":
-		Being = BEINGS.Kobold.duplicate(true)
+		Being = ENTITIES_DEFINES.Kobold.duplicate(true)
 	else:
 		return
 	## Should happen if in if elif group
@@ -146,6 +158,15 @@ func _being_init(Loc, Char):
 #	print(actors)
 	
 func _input(event):
+	if event.is_action_pressed("escape"):
+		if OS.get_name() == "HTML5":
+			$VSplitContainer.queue_free()
+			var label = Label.new()
+			label.text = "Game quit."
+			self.add_child(label)
+		else:
+			get_tree().quit(0)
+		pass
 	if event is InputEventMouseMotion:
 		return
 	if (waiting and pageSelect) and (event.is_action_pressed("ui_page_down") or event.is_action_pressed("ui_page_up")):
@@ -251,7 +272,13 @@ func _input(event):
 				var actorIndex = 0
 				var finalActorIndex = 0
 				for actor in actors:
-					if actor.Relation != "Hostile":
+					var skip = false
+					for relation in ENTITIES_HOSTILES:
+						if actor.Relation == relation:
+							break
+						else:
+							skip = true
+					if skip:
 						continue
 					var distance = get_distance(player.Loc, actor.Loc)
 					if distance < closestDistance:
@@ -633,6 +660,15 @@ func _handle_player_interaction(type, loc, array):
 		print(player.Inv)
 		statusLabel.text = "Grabbed a " + I.Type + " key."
 		notiTimer.start()
+	elif type == "+":
+		var I = item.duplicate(false)
+		I.Char = "+"
+		I.Type = "Lesser"
+		I.Uses = 3
+		player.Inv.append(I)
+		print(player.Inv)
+		statusLabel.text = "Got a " + I.Type + " heal potion."
+		notiTimer.start()
 	elif type == "D":
 		var result = _find_and_use_item("Y", player)
 		if result:
@@ -742,6 +778,14 @@ func _handle_damage_from_player(targetChar, targetLoc) -> bool:
 				return true
 			break
 	return false
+
+#Working ON
+#Behavs: RangedAI, RangedPlayer, MeleeAI, MeleePlayer, HunterGatherer, Scavenger 
+func _find_and_use_weapon(Actor, Behav):
+	
+	for item in Actor.Inv:
+		if item.Char in WEAPONS:
+			pass
 
 
 func _find_and_use_item(Item, Actor):
