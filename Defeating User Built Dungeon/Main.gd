@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 9, 3, "-alpha"]
-# Lightning Scroll Targeting
+var version = [0,10, 0, "-alpha"]
+# The Broken Projectile Update
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -19,6 +19,7 @@ var resetting = false
 var restarting = false
 var isDarkMode = false
 var pageSelect = false
+var firing = false
 var currentPageShown = 1
 var numOfPages = 0
 var notificationType = "status"
@@ -48,7 +49,7 @@ const RoomsStore = ["""
 var game_array = []
 
 # ">" - Down Stair*, "<" - Up Stair*, "Y" - Door Key*, "y" - Chest Key*, "D" - Door*, "K" - Skeleton Key*, "%" - Body*, "+" - Healing Potion*, "c" - Chest
-const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c"]
+const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c", "-"]
 # "#" - Wall*, "D" - Locked Door*, "X" - Old Wall*
 const COLLIDES = ["#", "D", "X"]
 # "r" - Rat*, "n" - DiNgo*, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player*, "x" - Crate*, "c" - Chest
@@ -59,10 +60,11 @@ const ENTITIES_DEFINES = {
 "Dingo": {"Speed": 3, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "n", "Behav": "Hungry", "Inv": [], "bodyDesc": "dingo", "Relation": "Dingos"},
 "Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
 "Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
-"Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"}
+"Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"},
+"Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2.ZERO, "DestLoc": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "Approaching", "Inv": [], "bodyDesc": "in flight", "Relation": "Projectile"}
 }
 
-const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold"]
+const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold", "Projectiles"]
 	
 # "T" - Sword, "S" - Whip, "Z" - Scroll, "V" - Shovel (tunnel walls, 2 dmg), "B" - Bow (range 6, 1dmg), "E" - Trident
 const WEAPONS = ["T", "S", "Z", "V", "B", "E"]
@@ -191,6 +193,27 @@ func _input(event):
 		_display_array(game_array)
 		_status_bar_update()
 		return
+	elif firing and event.is_pressed():
+		print("FIRE")
+		if Input.is_key_pressed(16777359):
+			_fireBow(player, 9)		
+		if event.is_action_pressed("fire_up"):
+			_fireBow(player, 8)		
+		if Input.is_key_pressed(16777357):
+			_fireBow(player, 7)		
+		if event.is_action_pressed("fire_right"):
+			_fireBow(player, 6)		
+		if Input.is_key_pressed(16777355):
+			_fireBow(player, 5)		
+		if event.is_action_pressed("fire_left"):
+			_fireBow(player, 4)		
+		if Input.is_key_pressed(16777353):
+			_fireBow(player, 3)		
+		if event.is_action_pressed("fire_down"):
+			_fireBow(player, 2)		
+		if Input.is_key_pressed(16777351):
+			_fireBow(player, 1)
+		return
 	elif event.is_action_pressed("paste") and OS.clipboard:
 		var take = OS.clipboard
 		take = _clean_pasted_text(take)
@@ -299,6 +322,29 @@ func _input(event):
 					statusLabel.text = "Lightning misses."
 					notiTimer.start()
 			scrollUse = ""
+	elif event.is_action_pressed("fire"):
+		firing = true
+		print(firing)
+		statusLabel.text = "Numpad to fire!"
+#			var targetActor = {}
+#			var closestDistance = 100
+#			var actorIndex = 0
+#			var finalActorIndex = 0
+#			for actor in actors:
+#				var skip = false
+#				for relation in ENTITIES_HOSTILES:
+#					if actor.Relation == relation:
+#						break
+#					else:
+#						skip = true
+#				if skip:
+#					continue
+#				var distance = get_distance(player.Loc, actor.Loc)
+#				if distance < closestDistance:
+#					targetActor = actor
+#					closestDistance = distance
+#					finalActorIndex = actorIndex
+#				actorIndex += 1
 	if not game_array:
 		if event.is_pressed():
 			var index = 0
@@ -669,6 +715,25 @@ func _handle_player_interaction(type, loc, array):
 		print(player.Inv)
 		statusLabel.text = "Got a " + I.Type + " heal potion."
 		notiTimer.start()
+	elif type == "-":
+		var I = item.duplicate(true)
+		I.Char = "-"
+		I.Uses = 6
+		player.Inv.append(I)
+		statusLabel.text = "Found " + str(I.Uses) + " ammo!"
+		notiTimer.start()
+	elif type == "c":
+		var result = _find_and_use_item("y", player)
+		if result:
+			a[loc.y][loc.x] = " "
+			var I = item.duplicate(true)
+			I.Char = "B"
+			I.Uses = 12
+			I.Value = 2
+			I.Type = "Long"
+			player.Inv.append(I)
+			statusLabel.text = "Looted Bow! Fire with X!"
+			notiTimer.start()
 	elif type == "D":
 		var result = _find_and_use_item("Y", player)
 		if result:
@@ -740,6 +805,10 @@ func _show_inv(shownPage):
 
 func _get_item_name(Char, Type) -> String:
 	match Char:
+		"-":
+			return Type + " Ammo"
+		"B":
+			return Type + " Bow"
 		"Y":
 			return Type + " Key"
 		"+":
@@ -1052,6 +1121,37 @@ func _clean_pasted_text(text:String) -> String:
 		index += 1
 	
 	return returnValue
+
+
+func _fireBow(Actor, Dir):
+	match Dir:
+		9:
+			Dir = Vector2(1,1)
+		8:
+			Dir = Vector2(0,1)
+		7:
+			Dir = Vector2(-1,1)
+		6:
+			Dir = Vector2(1,0)
+		5:
+			firing = false
+			return
+		4:
+			Dir = Vector2(-1,0)
+		3:
+			Dir = Vector2(1,-1)
+		2:
+			Dir = Vector2(0,-1)
+		1:
+			Dir = Vector2(-1,-1)
+	if _find_and_use_item("B", Actor) and _find_and_use_item("-", Actor):
+		var A = ENTITIES_DEFINES.Arrow.duplicate(true)
+		A.Loc = Actor.Loc + Dir
+		A.Dest = Dir * 100
+		game_array[A.Loc.y][A.Loc.x] = "-"
+		actors.append(A)
+		firing = false
+		_status_bar_update()
 
 func _on_NotificationTimer_timeout():
 	match notificationType:
