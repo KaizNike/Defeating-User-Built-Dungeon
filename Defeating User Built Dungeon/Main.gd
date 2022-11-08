@@ -2,8 +2,9 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0,10, 0, "-alpha"]
-# The Broken Projectile Update
+var version = [0,11, 0, "-alpha"]
+# Scoring Update
+# To fix - Projectiles
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -24,7 +25,7 @@ var currentPageShown = 1
 var numOfPages = 0
 var notificationType = "status"
 
-var save_vars = ["Player", "CurrentRoom", "Rooms"]
+var save_vars = ["Player", "CurrentRoom", "Rooms", "Scoring"]
 var autosaveLoc = "user://autosaveDUBD.tres"
 export (Script) var game_save_class
 
@@ -85,6 +86,10 @@ var actors = []
 var being = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "", "Behav": "Random", "Inv": [], "bodyDesc": "", "Relation": "None"}
 var player = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 4, "DMG": 1, "Char": "@", "Behav": "Player", "Inv": [], "bodyDesc": "dead you", "Relation": "Self"}
 var playerOrig = {}
+var scoring = {"Kills": "", "Steps": 0, "Time (s)": 0.0}
+var scoringOrig = {"Kills": "", "Steps": 0, "Time (s)": 0.0}
+var scoringVars = ["Kills", "Steps", "Time (s)"]
+var scoringTimer = true
 
 var corpses = []
 var body = {"Loc": Vector2.ZERO, "Inv": [], "Desc": ""}
@@ -96,6 +101,7 @@ func _ready():
 	randomize()
 	get_tree().connect("files_dropped", self, "_files_dropped")
 	playerOrig = player.duplicate(true)
+#	First start without autosave
 	if not load_game(autosaveLoc):
 		Rooms.append(RoomsStore[0])
 		if Rooms.size() < currentRoom:
@@ -104,11 +110,13 @@ func _ready():
 		print(Rooms.size())
 		game_array = _get_text_as_array(Rooms[0])
 		_actors_init(game_array)
+		scoring = scoringOrig.duplicate(true)
 		save_game(autosaveLoc)
 		levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
 		statusLabel.text = "Press Anything"
 		waiting = true
 	else:
+#		Reload autosave
 		game_array = _get_text_as_array(Rooms[currentRoom])
 		_actors_init(game_array)
 		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1)
@@ -262,6 +270,7 @@ func _input(event):
 				_change_level()
 			pass
 		else:
+#			TODO: Check for reset cancelled text.
 			levelLabel.text = "Press 'r' again to reset!"
 			statusLabel.text = "In reset mode."
 			resetting = true
@@ -363,6 +372,10 @@ func _input(event):
 		_process_turn(game_array,dir)
 
 
+func _physics_process(delta):
+	if scoringTimer:
+		scoring["Time (s)"] += delta
+
 func verify_save(save):
 	var size = 0
 	var currentRoom = 0
@@ -376,6 +389,13 @@ func verify_save(save):
 			size = inside.size()
 		elif v == "CurrentRoom":
 			currentRoom = inside
+		elif v == "Scoring":
+#			var insideScoring = save["Scoring"]
+			if scoringVars.size() != inside.size():
+				return false
+			if not inside.has_all(scoringVars):
+				return false
+			pass
 	if size < (currentRoom + 1):
 		print("Not enough rooms in save!")
 		return false
@@ -387,6 +407,8 @@ func save_game(loc):
 	new_save.Player = player
 	new_save.CurrentRoom = currentRoom
 	new_save.Rooms = Rooms
+	new_save.Scoring = scoring.duplicate(true)
+	print(new_save.Scoring)
 	var error = ResourceSaver.save(loc, new_save)
 	if error != 0:
 		print("Error saving!")
@@ -407,6 +429,7 @@ func load_game(loc) -> bool:
 	player = loaded_save.Player
 	currentRoom = loaded_save.CurrentRoom
 	Rooms = loaded_save.Rooms
+	scoring = loaded_save.Scoring.duplicate(true)
 	
 	return true
 
@@ -448,6 +471,7 @@ func start_over():
 	corpses.clear()
 	game_array = _get_text_as_array(Rooms[0])
 	_actors_init(game_array)
+	scoring = scoringOrig.duplicate(true)
 	save_game(autosaveLoc)
 	levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
 	statusLabel.text = "Press Anything"
@@ -480,6 +504,7 @@ func _process_turn(array, dir):
 
 # Edits the array and returns to _move_actors(), handles player centered actions
 func _move_player(array, dir, actor):
+	scoring.Steps += 1
 	if dir == Vector2.ZERO:
 		print("You wait a minute.")
 		statusLabel.text = "You wait a minute."
@@ -760,6 +785,7 @@ func _handle_player_interaction(type, loc, array):
 			for actor in actors:
 				if actor.Char == type and actor.Loc == loc:
 					_add_corpse(actor)
+					scoring.Kills += actor.Char
 	return a
 	pass
 
