@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 12, 0, "-alpha"]
-# Arrows Work
+var version = [0, 12, 1, "-alpha"]
+# Arrows Work (More)
 # Arrows need more love
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
@@ -62,7 +62,7 @@ const ENTITIES_DEFINES = {
 "Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
 "Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
 "Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"},
-"Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2.ZERO, "Dir": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "OnTrajectory", "Inv": [], "bodyDesc": "in flight", "Relation": "Projectile"}
+"Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2.ZERO, "Dir": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "OnTrajectory", "Inv": [], "bodyDesc": "broken shaft", "Relation": "Projectile"}
 }
 
 const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold", "Projectiles"]
@@ -584,6 +584,10 @@ func _move_actors(array, dir):
 				for targetActor in actors:
 					if targetActor.Char == Dest and targetActor.Loc == actorLoc:
 						targetActor.HP -= Actor.DMG
+						Actor.HP -= Actor.DMG
+						if Actor.HP < 1:
+							_add_corpse(Actor)
+							a[Actor.Loc.y][Actor.Loc.x] = "%"
 						if targetActor.HP < 1:
 							if targetActor.Char == "@":
 								statusLabel.text = "You are slain."
