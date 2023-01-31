@@ -2,9 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 12, 1, "-alpha"]
-# Arrows Work (More)
-# Arrows need more love
+var version = [0, 12, 2, "-alpha"]
+# Projectiles Wrapup
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -18,6 +17,7 @@ var waiting = false
 var levelDiff = 0
 var resetting = false
 var restarting = false
+var escaping = false
 var isDarkMode = false
 var pageSelect = false
 var firing = false
@@ -65,7 +65,7 @@ const ENTITIES_DEFINES = {
 "Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2.ZERO, "Dir": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "OnTrajectory", "Inv": [], "bodyDesc": "broken shaft", "Relation": "Projectile"}
 }
 
-const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold", "Projectiles"]
+const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold", "Projectile"]
 	
 # "T" - Sword, "S" - Whip, "Z" - Scroll, "V" - Shovel (tunnel walls, 2 dmg), "B" - Bow (range 6, 1dmg), "E" - Trident
 const WEAPONS = ["T", "S", "Z", "V", "B", "E"]
@@ -175,14 +175,18 @@ func _being_init(Loc, Char):
 #	print(actors)
 	
 func _input(event):
-#	if event.is_action_pressed("escape"):
-#		if OS.get_name() == "HTML5":
-#			$VSplitContainer.queue_free()
-#			var label = Label.new()
-#			label.text = "Game quit."
-#			self.add_child(label)
-#		else:
-#			get_tree().quit(0)
+	print(escaping)
+	if event.is_action_pressed("escape"):
+		statusLabel.text = "Escape again to quit."
+		if escaping:
+			if OS.get_name() == "HTML5":
+				levelLabel.text = ""
+				statusLabel.text = "Game quit."
+				waiting = true
+			else:
+				get_tree().quit(0)
+		escaping = true
+		return
 #		pass
 	if event is InputEventMouseMotion:
 		return
@@ -208,7 +212,14 @@ func _input(event):
 		_display_array(game_array)
 		_status_bar_update()
 		return
+	if escaping and event.is_pressed():
+		_status_bar_update()
+		escaping = false
 	elif firing and event.is_pressed():
+		if _handle_move_input(event):
+			firing = false
+			statusLabel.text = "Firing cancelled."
+			notiTimer.start()
 		print("FIRE")
 		if Input.is_key_pressed(16777359):
 			_fireBow(player, 9)		
@@ -277,7 +288,6 @@ func _input(event):
 				_change_level()
 			pass
 		else:
-#			TODO: Check for reset cancelled text.
 			levelLabel.text = "Press 'r' again to reset!"
 			statusLabel.text = "In reset mode."
 			resetting = true
@@ -306,14 +316,17 @@ func _input(event):
 	elif event.is_action_pressed("use_scroll"):
 		if _find_and_use_item("Z", player):
 			if scrollUse == "Lightning":
+				print("Lightning used start!")
 				var targetActor = {}
 				var closestDistance = 100
 				var actorIndex = 0
 				var finalActorIndex = 0
 				for actor in actors:
+#					print(actor)
 					var skip = false
 					for relation in ENTITIES_HOSTILES:
 						if actor.Relation == relation:
+							skip = false
 							break
 						else:
 							skip = true
@@ -383,9 +396,7 @@ func _input(event):
 				statusLabel.text = "Drag and drop a .txt"
 				notiTimer.start()
 		return
-	var dir = Vector2(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
-	if dir != Vector2.ZERO or event.is_action_pressed("wait"):
-		_process_turn(game_array,dir)
+	_handle_move_input(event)
 
 
 func _physics_process(delta):
@@ -518,6 +529,13 @@ func _process_turn(array, dir):
 			if currentRoom == -1:
 				levelLabel.text += "\nYou leave the dungeon."
 
+func _handle_move_input(event) -> bool:
+	var dir = Vector2(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
+	if dir != Vector2.ZERO or event.is_action_pressed("wait"):
+		_process_turn(game_array,dir)
+		return true
+	return false
+
 # Edits the array and returns to _move_actors(), handles player centered actions
 func _move_player(array, dir, actor):
 	scoring.Steps += 1
@@ -543,9 +561,8 @@ func _move_player(array, dir, actor):
 		return array
 	if Dest in WEAPONS:
 		_grab_weapon(Dest)
-#	 Working On
 	if Dest in ARMORS:
-		pass
+		_grab_armor(Dest)
 	
 	a[Pos.y][Pos.x] = "."
 	a[Loc.y][Loc.x] = "@"
@@ -797,6 +814,7 @@ func _handle_player_interaction(type, loc, array):
 		I.Char = "+"
 		I.Type = "Lesser"
 		I.Uses = 3
+		I.Value = 1
 		player.Inv.append(I)
 		print(player.Inv)
 		statusLabel.text = "Got a " + I.Type + " heal potion."
@@ -862,6 +880,16 @@ func _grab_weapon(Char):
 			player.Inv.append(I)
 			statusLabel.text = "Looted Bow! Fire with X!"
 			notiTimer.start()
+
+# Future - Weapons and Armor Update
+func _grab_armor(Char):
+	match Char:
+		"O":
+			pass
+		"P":
+			pass
+		"B":
+			pass
 
 func _show_inv(shownPage):
 	currentPageShown = shownPage
@@ -948,7 +976,7 @@ func _handle_damage_from_player(targetChar, targetLoc) -> bool:
 			break
 	return false
 
-#Working ON
+#Future - Weapons and Armor Update
 #Behavs: RangedAI, RangedPlayer, MeleeAI, MeleePlayer, HunterGatherer, Scavenger 
 func _find_and_use_weapon(Actor, Behav):
 	
@@ -965,9 +993,8 @@ func _find_and_use_item(Item, Actor):
 				if spot.Char == Item:
 #					print("OK!")
 					if Item == "+":
-						if spot.Type == "Lesser":
-							Actor.HP += 1
-							print(Actor.Char + " healed to: " + str(Actor.HP))
+						Actor.HP += Item.Value
+						print(Actor.Char + " healed to: " + str(Actor.HP))
 					elif Item == "Z":
 						scrollUse = spot.Type
 					spot.Uses -= 1
@@ -1257,7 +1284,7 @@ func _fireBow(Actor, Dir):
 			Dir = Vector2(-1,1)
 	var bow = _find_and_use_item("B", Actor)
 	var arrow = _find_and_use_item("-", Actor)
-	if _find_and_use_item("B", Actor) and _find_and_use_item("-", Actor):
+	if bow and arrow:
 		var A = ENTITIES_DEFINES.Arrow.duplicate(true)
 		A.Loc = Actor.Loc + Dir
 		if game_array[A.Loc.y][A.Loc.x] in COLLIDES:
@@ -1265,6 +1292,16 @@ func _fireBow(Actor, Dir):
 			notiTimer.start()
 			firing = false
 			return
+		for targetActor in actors:
+			if targetActor.Loc == A.Loc:
+				targetActor.HP -= A.DMG
+				A.HP -= A.DMG
+				statusLabel.text = "Your shot hit " + A.Char + " for " + str(A.DMG)
+				if targetActor.HP < 1:
+					_add_corpse(targetActor)
+					game_array[targetActor.Loc.y][targetActor.Loc.x] = "%"
+				firing = false
+				return
 		A.Dir = Dir
 		game_array[A.Loc.y][A.Loc.x] = "-"
 		_display_array(game_array)
