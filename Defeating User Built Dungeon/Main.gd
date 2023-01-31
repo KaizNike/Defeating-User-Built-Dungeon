@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 12, 2, "-alpha"]
-# Projectiles Wrapup
+var version = [0, 12, 3, "-alpha"]
+# Projectiles Wrapup (Clarity Edition)
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -392,8 +392,8 @@ func _input(event):
 					return
 				index += 1
 			if currentRoom > -1:
-				levelLabel.text = "World is empty, you can't continue."
-				statusLabel.text = "Drag and drop a .txt"
+				levelLabel.text = "Drag and drop a .txt of the level or copy and paste."
+				statusLabel.text = "World is empty."
 				notiTimer.start()
 		return
 	_handle_move_input(event)
