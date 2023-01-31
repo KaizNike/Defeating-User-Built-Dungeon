@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 9, 3, "-alpha"]
-# Lightning Scroll Targeting
+var version = [0, 12, 2, "-alpha"]
+# Projectiles Wrapup
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -17,13 +17,15 @@ var waiting = false
 var levelDiff = 0
 var resetting = false
 var restarting = false
+var escaping = false
 var isDarkMode = false
 var pageSelect = false
+var firing = false
 var currentPageShown = 1
 var numOfPages = 0
 var notificationType = "status"
 
-var save_vars = ["Player", "CurrentRoom", "Rooms"]
+var save_vars = ["Player", "CurrentRoom", "Rooms", "Scoring"]
 var autosaveLoc = "user://autosaveDUBD.tres"
 export (Script) var game_save_class
 
@@ -48,7 +50,7 @@ const RoomsStore = ["""
 var game_array = []
 
 # ">" - Down Stair*, "<" - Up Stair*, "Y" - Door Key*, "y" - Chest Key*, "D" - Door*, "K" - Skeleton Key*, "%" - Body*, "+" - Healing Potion*, "c" - Chest
-const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c"]
+const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c", "-"]
 # "#" - Wall*, "D" - Locked Door*, "X" - Old Wall*
 const COLLIDES = ["#", "D", "X"]
 # "r" - Rat*, "n" - DiNgo*, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player*, "x" - Crate*, "c" - Chest
@@ -59,13 +61,16 @@ const ENTITIES_DEFINES = {
 "Dingo": {"Speed": 3, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "n", "Behav": "Hungry", "Inv": [], "bodyDesc": "dingo", "Relation": "Dingos"},
 "Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
 "Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
-"Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"}
+"Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"},
+"Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2.ZERO, "Dir": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "OnTrajectory", "Inv": [], "bodyDesc": "broken shaft", "Relation": "Projectile"}
 }
 
-const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold"]
+const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold", "Projectile"]
 	
 # "T" - Sword, "S" - Whip, "Z" - Scroll, "V" - Shovel (tunnel walls, 2 dmg), "B" - Bow (range 6, 1dmg), "E" - Trident
 const WEAPONS = ["T", "S", "Z", "V", "B", "E"]
+# Ranged - "B" - Bow
+const RANGED = ["B"]
 
 #const WEAPONS_DEFINES = {
 #	"Sword": {"Char": "T", "Uses": 12, "Type": ""},
@@ -83,17 +88,19 @@ var actors = []
 var being = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "", "Behav": "Random", "Inv": [], "bodyDesc": "", "Relation": "None"}
 var player = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 4, "DMG": 1, "Char": "@", "Behav": "Player", "Inv": [], "bodyDesc": "dead you", "Relation": "Self"}
 var playerOrig = {}
+var scoring = {"Kills": "", "Steps": 0, "Time (s)": 0.0}
+var scoringOrig = {"Kills": "", "Steps": 0, "Time (s)": 0.0}
+var scoringVars = ["Kills", "Steps", "Time (s)"]
+var scoringTimer = true
 
 var corpses = []
 var body = {"Loc": Vector2.ZERO, "Inv": [], "Desc": ""}
-
-var projectiles = []
-var projectile = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "MoveFoward", "Relation": "Dangerous"}
 
 func _ready():
 	randomize()
 	get_tree().connect("files_dropped", self, "_files_dropped")
 	playerOrig = player.duplicate(true)
+#	First start without autosave
 	if not load_game(autosaveLoc):
 		Rooms.append(RoomsStore[0])
 		if Rooms.size() < currentRoom:
@@ -102,12 +109,22 @@ func _ready():
 		print(Rooms.size())
 		game_array = _get_text_as_array(Rooms[0])
 		_actors_init(game_array)
+		scoring = scoringOrig.duplicate(true)
 		save_game(autosaveLoc)
 		levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
 		statusLabel.text = "Press Anything"
 		waiting = true
 	else:
+#		Reload autosave
 		game_array = _get_text_as_array(Rooms[currentRoom])
+		var yindex = 0
+		var xindex = 0
+		for y in game_array:
+			for x in y:
+				print(x + " : " + str(xindex) + ", " + str(yindex))
+				xindex += 1
+			xindex = 0
+			yindex += 1
 		_actors_init(game_array)
 		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1)
 		statusLabel.text = "Press Anything"
@@ -158,15 +175,19 @@ func _being_init(Loc, Char):
 #	print(actors)
 	
 func _input(event):
+	print(escaping)
 	if event.is_action_pressed("escape"):
-		if OS.get_name() == "HTML5":
-			$VSplitContainer.queue_free()
-			var label = Label.new()
-			label.text = "Game quit."
-			self.add_child(label)
-		else:
-			get_tree().quit(0)
-		pass
+		statusLabel.text = "Escape again to quit."
+		if escaping:
+			if OS.get_name() == "HTML5":
+				levelLabel.text = ""
+				statusLabel.text = "Game quit."
+				waiting = true
+			else:
+				get_tree().quit(0)
+		escaping = true
+		return
+#		pass
 	if event is InputEventMouseMotion:
 		return
 	if (waiting and pageSelect) and (event.is_action_pressed("ui_page_down") or event.is_action_pressed("ui_page_up")):
@@ -190,6 +211,34 @@ func _input(event):
 		waiting = false
 		_display_array(game_array)
 		_status_bar_update()
+		return
+	if escaping and event.is_pressed():
+		_status_bar_update()
+		escaping = false
+	elif firing and event.is_pressed():
+		if _handle_move_input(event):
+			firing = false
+			statusLabel.text = "Firing cancelled."
+			notiTimer.start()
+		print("FIRE")
+		if Input.is_key_pressed(16777359):
+			_fireBow(player, 9)		
+		if event.is_action_pressed("fire_up"):
+			_fireBow(player, 8)		
+		if Input.is_key_pressed(16777357):
+			_fireBow(player, 7)		
+		if event.is_action_pressed("fire_right"):
+			_fireBow(player, 6)		
+		if Input.is_key_pressed(16777355):
+			_fireBow(player, 5)		
+		if event.is_action_pressed("fire_left"):
+			_fireBow(player, 4)		
+		if Input.is_key_pressed(16777353):
+			_fireBow(player, 3)		
+		if event.is_action_pressed("fire_down"):
+			_fireBow(player, 2)		
+		if Input.is_key_pressed(16777351):
+			_fireBow(player, 1)
 		return
 	elif event.is_action_pressed("paste") and OS.clipboard:
 		var take = OS.clipboard
@@ -267,14 +316,17 @@ func _input(event):
 	elif event.is_action_pressed("use_scroll"):
 		if _find_and_use_item("Z", player):
 			if scrollUse == "Lightning":
+				print("Lightning used start!")
 				var targetActor = {}
 				var closestDistance = 100
 				var actorIndex = 0
 				var finalActorIndex = 0
 				for actor in actors:
+#					print(actor)
 					var skip = false
 					for relation in ENTITIES_HOSTILES:
 						if actor.Relation == relation:
+							skip = false
 							break
 						else:
 							skip = true
@@ -299,6 +351,38 @@ func _input(event):
 					statusLabel.text = "Lightning misses."
 					notiTimer.start()
 			scrollUse = ""
+	elif event.is_action_pressed("fire"):
+		var test = false
+		for item in RANGED:
+			if _find_item(item, player):
+				test = true
+				break
+		if test == false:
+			statusLabel.text = "No ranged weapon!"
+			notiTimer.start()
+			return
+		firing = true
+		print(firing)
+		statusLabel.text = "Numpad to fire!"
+#			var targetActor = {}
+#			var closestDistance = 100
+#			var actorIndex = 0
+#			var finalActorIndex = 0
+#			for actor in actors:
+#				var skip = false
+#				for relation in ENTITIES_HOSTILES:
+#					if actor.Relation == relation:
+#						break
+#					else:
+#						skip = true
+#				if skip:
+#					continue
+#				var distance = get_distance(player.Loc, actor.Loc)
+#				if distance < closestDistance:
+#					targetActor = actor
+#					closestDistance = distance
+#					finalActorIndex = actorIndex
+#				actorIndex += 1
 	if not game_array:
 		if event.is_pressed():
 			var index = 0
@@ -312,10 +396,12 @@ func _input(event):
 				statusLabel.text = "Drag and drop a .txt"
 				notiTimer.start()
 		return
-	var dir = Vector2(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
-	if dir != Vector2.ZERO or event.is_action_pressed("wait"):
-		_process_turn(game_array,dir)
+	_handle_move_input(event)
 
+
+func _physics_process(delta):
+	if scoringTimer:
+		scoring["Time (s)"] += delta
 
 func verify_save(save):
 	var size = 0
@@ -330,6 +416,13 @@ func verify_save(save):
 			size = inside.size()
 		elif v == "CurrentRoom":
 			currentRoom = inside
+		elif v == "Scoring":
+#			var insideScoring = save["Scoring"]
+			if scoringVars.size() != inside.size():
+				return false
+			if not inside.has_all(scoringVars):
+				return false
+			pass
 	if size < (currentRoom + 1):
 		print("Not enough rooms in save!")
 		return false
@@ -341,6 +434,8 @@ func save_game(loc):
 	new_save.Player = player
 	new_save.CurrentRoom = currentRoom
 	new_save.Rooms = Rooms
+	new_save.Scoring = scoring.duplicate(true)
+	print(new_save.Scoring)
 	var error = ResourceSaver.save(loc, new_save)
 	if error != 0:
 		print("Error saving!")
@@ -361,6 +456,7 @@ func load_game(loc) -> bool:
 	player = loaded_save.Player
 	currentRoom = loaded_save.CurrentRoom
 	Rooms = loaded_save.Rooms
+	scoring = loaded_save.Scoring.duplicate(true)
 	
 	return true
 
@@ -402,6 +498,7 @@ func start_over():
 	corpses.clear()
 	game_array = _get_text_as_array(Rooms[0])
 	_actors_init(game_array)
+	scoring = scoringOrig.duplicate(true)
 	save_game(autosaveLoc)
 	levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
 	statusLabel.text = "Press Anything"
@@ -432,8 +529,16 @@ func _process_turn(array, dir):
 			if currentRoom == -1:
 				levelLabel.text += "\nYou leave the dungeon."
 
+func _handle_move_input(event) -> bool:
+	var dir = Vector2(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
+	if dir != Vector2.ZERO or event.is_action_pressed("wait"):
+		_process_turn(game_array,dir)
+		return true
+	return false
+
 # Edits the array and returns to _move_actors(), handles player centered actions
 func _move_player(array, dir, actor):
+	scoring.Steps += 1
 	if dir == Vector2.ZERO:
 		print("You wait a minute.")
 		statusLabel.text = "You wait a minute."
@@ -454,6 +559,10 @@ func _move_player(array, dir, actor):
 		a = _handle_player_interaction(Dest, Loc, array)
 	if Dest in COLLIDES or Dest in ENTITIES:
 		return array
+	if Dest in WEAPONS:
+		_grab_weapon(Dest)
+	if Dest in ARMORS:
+		_grab_armor(Dest)
 	
 	a[Pos.y][Pos.x] = "."
 	a[Loc.y][Loc.x] = "@"
@@ -462,6 +571,7 @@ func _move_player(array, dir, actor):
 
 # yield(get_tree(), "idle_frame")
 func _move_actors(array, dir):
+#	Duplicate here?
 	var a = array
 	for Actor in actors:
 		if Actor.Turns == 0:
@@ -477,6 +587,45 @@ func _move_actors(array, dir):
 			continue
 		elif Actor.Behav == "Hunter":
 			continue
+		elif Actor.Behav == "OnTrajectory":
+			var actorLoc = Actor.Loc + Actor.Dir
+			if actorLoc.x < 0 or actorLoc.x > array[0].size() - 1 or actorLoc.y < 0 or actorLoc.y > array.size() - 1:
+				continue
+			var Dest = a[actorLoc.y][actorLoc.x]
+			if Dest in COLLIDES:
+				print("Hits wall.")
+				_add_corpse(Actor)
+				a[Actor.Loc.y][Actor.Loc.x] = "%"
+			elif Dest in ENTITIES:
+				var targetIndex = 0
+				for targetActor in actors:
+					if targetActor.Char == Dest and targetActor.Loc == actorLoc:
+						targetActor.HP -= Actor.DMG
+						Actor.HP -= Actor.DMG
+						if Actor.HP < 1:
+							_add_corpse(Actor)
+							a[Actor.Loc.y][Actor.Loc.x] = "%"
+						if targetActor.HP < 1:
+							if targetActor.Char == "@":
+								statusLabel.text = "You are slain."
+							_add_corpse(targetActor)
+#							actors.remove(targetIndex)
+							a[actorLoc.y][actorLoc.x] = "%"
+							break
+						if targetActor.Char == "@":
+							statusLabel.text = "You got hit for " + str(Actor.DMG) + " DMG!"
+							notiTimer.start()
+							break
+					targetIndex += 1
+			elif Dest in COLLIDES or Dest in ENTITIES or Dest in WEAPONS or Dest in PROJECTILES or Dest in ARMORS:
+				print("Hits object.")
+				_add_corpse(Actor)
+				a[Actor.Loc.y][Actor.Loc.x] = "%"
+			else:
+				a[Actor.Loc.y][Actor.Loc.x] = " "
+				a[actorLoc.y][actorLoc.x] = Actor.Char
+				Actor.Loc = actorLoc
+				Actor.Turns -= 1
 		elif Actor.Behav == "Hungry":
 			var actorDir = Vector2.ZERO
 			print("A Hungry One At: " + str(Actor.Loc))
@@ -576,7 +725,7 @@ func _move_actors(array, dir):
 			if Dest in INTERACTS:
 				if _handle_actor_interaction(Actor,Dest, actorLoc):
 					continue
-			if Dest in COLLIDES or Dest in ENTITIES:
+			if Dest in COLLIDES or Dest in ENTITIES or Dest in WEAPONS or Dest in PROJECTILES or Dest in ARMORS:
 				continue
 			else:
 				a[Actor.Loc.y][Actor.Loc.x] = " "
@@ -665,10 +814,30 @@ func _handle_player_interaction(type, loc, array):
 		I.Char = "+"
 		I.Type = "Lesser"
 		I.Uses = 3
+		I.Value = 1
 		player.Inv.append(I)
 		print(player.Inv)
 		statusLabel.text = "Got a " + I.Type + " heal potion."
 		notiTimer.start()
+	elif type == "-":
+		var I = item.duplicate(true)
+		I.Char = "-"
+		I.Uses = 6
+		player.Inv.append(I)
+		statusLabel.text = "Found " + str(I.Uses) + " ammo!"
+		notiTimer.start()
+	elif type == "c":
+		var result = _find_and_use_item("y", player)
+		if result:
+			a[loc.y][loc.x] = " "
+			var I = item.duplicate(true)
+			I.Char = "B"
+			I.Uses = 12
+			I.Value = 2
+			I.Type = "Long"
+			player.Inv.append(I)
+			statusLabel.text = "Looted Bow! Fire with X!"
+			notiTimer.start()
 	elif type == "D":
 		var result = _find_and_use_item("Y", player)
 		if result:
@@ -695,8 +864,32 @@ func _handle_player_interaction(type, loc, array):
 			for actor in actors:
 				if actor.Char == type and actor.Loc == loc:
 					_add_corpse(actor)
+					scoring.Kills += actor.Char
 	return a
 	pass
+
+
+func _grab_weapon(Char):
+	match Char:
+		"B":
+			var I = item.duplicate(true)
+			I.Char = "B"
+			I.Uses = 6
+			I.Value = 1
+			I.Type = "Straight"
+			player.Inv.append(I)
+			statusLabel.text = "Looted Bow! Fire with X!"
+			notiTimer.start()
+
+# Future - Weapons and Armor Update
+func _grab_armor(Char):
+	match Char:
+		"O":
+			pass
+		"P":
+			pass
+		"B":
+			pass
 
 func _show_inv(shownPage):
 	currentPageShown = shownPage
@@ -740,6 +933,10 @@ func _show_inv(shownPage):
 
 func _get_item_name(Char, Type) -> String:
 	match Char:
+		"-":
+			return Type + " Ammo"
+		"B":
+			return Type + " Bow"
 		"Y":
 			return Type + " Key"
 		"+":
@@ -779,7 +976,7 @@ func _handle_damage_from_player(targetChar, targetLoc) -> bool:
 			break
 	return false
 
-#Working ON
+#Future - Weapons and Armor Update
 #Behavs: RangedAI, RangedPlayer, MeleeAI, MeleePlayer, HunterGatherer, Scavenger 
 func _find_and_use_weapon(Actor, Behav):
 	
@@ -796,9 +993,8 @@ func _find_and_use_item(Item, Actor):
 				if spot.Char == Item:
 #					print("OK!")
 					if Item == "+":
-						if spot.Type == "Lesser":
-							Actor.HP += 1
-							print(Actor.Char + " healed to: " + str(Actor.HP))
+						Actor.HP += Item.Value
+						print(Actor.Char + " healed to: " + str(Actor.HP))
 					elif Item == "Z":
 						scrollUse = spot.Type
 					spot.Uses -= 1
@@ -811,6 +1007,17 @@ func _find_and_use_item(Item, Actor):
 	# If item not found
 	return false
 	
+func _find_item(Item, Actor) -> bool:
+	var spotIndex = 0
+	for spot in Actor.Inv:
+		if typeof(spot) == 18:
+			if "Char" in spot and "Uses" in spot:
+				if spot.Char == Item:
+					return true
+		spotIndex += 1
+	# If item not found
+	return false
+
 
 func _spawn_item_inside_container(containerInv : Array, containerType):
 	var Item = item.duplicate(true)
@@ -1052,6 +1259,67 @@ func _clean_pasted_text(text:String) -> String:
 		index += 1
 	
 	return returnValue
+
+
+func _fireBow(Actor, Dir):
+	match Dir:
+		9:
+			Dir = Vector2(1,-1)
+		8:
+			Dir = Vector2(0,-1)
+		7:
+			Dir = Vector2(-1,-1)
+		6:
+			Dir = Vector2(1,0)
+		5:
+			firing = false
+			return
+		4:
+			Dir = Vector2(-1,0)
+		3:
+			Dir = Vector2(1,1)
+		2:
+			Dir = Vector2(0,1)
+		1:
+			Dir = Vector2(-1,1)
+	var bow = _find_and_use_item("B", Actor)
+	var arrow = _find_and_use_item("-", Actor)
+	if bow and arrow:
+		var A = ENTITIES_DEFINES.Arrow.duplicate(true)
+		A.Loc = Actor.Loc + Dir
+		if game_array[A.Loc.y][A.Loc.x] in COLLIDES:
+			statusLabel.text = "Your shot hits the wall."
+			notiTimer.start()
+			firing = false
+			return
+		for targetActor in actors:
+			if targetActor.Loc == A.Loc:
+				targetActor.HP -= A.DMG
+				A.HP -= A.DMG
+				statusLabel.text = "Your shot hit " + A.Char + " for " + str(A.DMG)
+				if targetActor.HP < 1:
+					_add_corpse(targetActor)
+					game_array[targetActor.Loc.y][targetActor.Loc.x] = "%"
+				firing = false
+				return
+		A.Dir = Dir
+		game_array[A.Loc.y][A.Loc.x] = "-"
+		_display_array(game_array)
+		actors.append(A)
+		firing = false
+		if Actor.Char == "@":
+			_status_bar_update()
+	else:
+		if Actor.Char == "@":
+			var text = ""
+			if not bow:
+				text += "Bow"
+				if not arrow:
+					text += " + Arrows"
+			else:
+				if not arrow:
+					text += "Arrows"
+			statusLabel.text = "Missing: " + text
 
 func _on_NotificationTimer_timeout():
 	match notificationType:
