@@ -2,18 +2,21 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 12, 3, "-alpha"]
-# Projectiles Wrapup (Clarity Edition)
+var version = [0, 13, 0, "-alpha"]
+# Level/Text Editor Update
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
 onready var levelLabel = $VSplitContainer/LevelLabel
 onready var statusLabel = $VSplitContainer/StatusLabel
 onready var notiTimer = $NotificationTimer
+onready var textEdit = $TextEdit
 
 var currentRoom = 0
 var levelChange = false
 var waiting = false
+var waitingOn = ""
+var frozenInputs = false
 var levelDiff = 0
 var resetting = false
 var restarting = false
@@ -21,6 +24,7 @@ var escaping = false
 var isDarkMode = false
 var pageSelect = false
 var firing = false
+var opposite = false
 var currentPageShown = 1
 var numOfPages = 0
 var notificationType = "status"
@@ -114,6 +118,7 @@ func _ready():
 		levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
 		statusLabel.text = "Press Anything"
 		waiting = true
+		waitingOn = "Start"
 	else:
 #		Reload autosave
 		game_array = _get_text_as_array(Rooms[currentRoom])
@@ -129,6 +134,7 @@ func _ready():
 		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1)
 		statusLabel.text = "Press Anything"
 		waiting = true
+		waitingOn = "Start"
 	
 class SortingActors:
 	static func sort_descending(a,b):
@@ -145,7 +151,8 @@ func _actors_init(array):
 		actors.sort_custom(SortingActors, "sort_descending")
 	print(actors)
 	
-
+# TODO
+# Possibilites Here, iterate through ENTITIES_DEFINES or a match
 # If found in entities, add to array
 func _being_init(Loc, Char):
 	var Being = being.duplicate(true)
@@ -175,21 +182,50 @@ func _being_init(Loc, Char):
 #	print(actors)
 	
 func _input(event):
+#	Everything that causes input to be ignored
+	if event is InputEventMouseMotion or (waiting and waitingOn == "Quit"):
+		return
 	print(escaping)
 	if event.is_action_pressed("escape"):
+		if waiting and waitingOn == "Inventory":
+			_display_array(game_array)
+			_status_bar_update()
+			return
 		statusLabel.text = "Escape again to quit."
 		if escaping:
 			if OS.get_name() == "HTML5":
 				levelLabel.text = ""
 				statusLabel.text = "Game quit."
 				waiting = true
+				waitingOn = "Quit"
 			else:
 				get_tree().quit(0)
 		escaping = true
 		return
 #		pass
-	if event is InputEventMouseMotion:
-		return
+	if event.is_action_pressed("enter_level_editor"):
+		$VSplitContainer.visible = opposite
+		opposite = !opposite
+		frozenInputs = opposite
+		textEdit.visible = opposite
+#		Copy current level to editor
+		if textEdit.visible:
+			textEdit.text = levelLabel.text
+	if event.is_action_pressed("save_level") and textEdit.visible:
+#		Save level and present
+		var take = _clean_pasted_text(textEdit.text)
+		print(take)
+		if not take:
+			return
+		if not levelChange:
+			Rooms[currentRoom] = take
+		else:
+			Rooms.append(take)
+		_change_level()
+		$VSplitContainer.visible = opposite
+		opposite = !opposite
+		frozenInputs = opposite
+		textEdit.visible = opposite
 	if (waiting and pageSelect) and (event.is_action_pressed("ui_page_down") or event.is_action_pressed("ui_page_up")):
 		if event.is_action_pressed("ui_page_down"):
 			if currentPageShown == numOfPages:
@@ -206,9 +242,13 @@ func _input(event):
 #	if event is InputEventKey and event.scancode == KEY_SHIFT:
 #		print("shift")
 #	print(_get_text_as_array(OS.clipboard))
+#	Ignores inputs past essential ones
+	if frozenInputs:
+		return
 	if waiting and event.is_pressed():
 		pageSelect = false
 		waiting = false
+		waitingOn = ""
 		_display_array(game_array)
 		_status_bar_update()
 		return
@@ -242,6 +282,7 @@ func _input(event):
 		return
 	elif event.is_action_pressed("paste") and OS.clipboard:
 		var take = OS.clipboard
+		print(take)
 		take = _clean_pasted_text(take)
 		print(take)
 		if not take:
@@ -392,7 +433,9 @@ func _input(event):
 					return
 				index += 1
 			if currentRoom > -1:
-				levelLabel.text = "Drag and drop a .txt of the level or copy and paste."
+				levelLabel.text = "Press '~' to enter level editor, or drag'n'drop or copy'n'paste a level in!"
+				if OS.get_name() == "HTML5":
+					levelLabel.text += " On web you may need to use the browser's Edit -> Paste."
 				statusLabel.text = "World is empty."
 				notiTimer.start()
 		return
@@ -503,6 +546,7 @@ func start_over():
 	levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
 	statusLabel.text = "Press Anything"
 	waiting = true
+	waitingOn = "Start"
 	
 func _process_turn(array, dir):
 #	var a = _move_player(array, dir)
@@ -527,7 +571,9 @@ func _process_turn(array, dir):
 		elif levelDiff == -1:
 			levelLabel.text = "You walk upstairs."
 			if currentRoom == -1:
-				levelLabel.text += "\nYou leave the dungeon."
+#				levelLabel.text += "\nYou leave the dungeon."
+				levelLabel.text += "\nScores:\n" + "Time: " + str(scoring['Time (s)']) + "\nSteps: " + str(scoring.Steps) + "\nKills:\n" + str(scoring.Kills)
+		
 
 func _handle_move_input(event) -> bool:
 	var dir = Vector2(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
@@ -797,7 +843,7 @@ func _handle_player_interaction(type, loc, array):
 		var I = item.duplicate(false)
 		I.Char = "Y"
 		I.Type = "door"
-		player.Inv.append(I)
+		_add_item_to_player_inv(I)
 		print(player.Inv)
 		statusLabel.text = "Grabbed a " + I.Type + " key."
 		notiTimer.start()
@@ -805,7 +851,7 @@ func _handle_player_interaction(type, loc, array):
 		var I = item.duplicate(false)
 		I.Char = "y"
 		I.Type = "chest"
-		player.Inv.append(I)
+		_add_item_to_player_inv(I)
 		print(player.Inv)
 		statusLabel.text = "Grabbed a " + I.Type + " key."
 		notiTimer.start()
@@ -815,7 +861,7 @@ func _handle_player_interaction(type, loc, array):
 		I.Type = "Lesser"
 		I.Uses = 3
 		I.Value = 1
-		player.Inv.append(I)
+		_add_item_to_player_inv(I)
 		print(player.Inv)
 		statusLabel.text = "Got a " + I.Type + " heal potion."
 		notiTimer.start()
@@ -823,7 +869,7 @@ func _handle_player_interaction(type, loc, array):
 		var I = item.duplicate(true)
 		I.Char = "-"
 		I.Uses = 6
-		player.Inv.append(I)
+		_add_item_to_player_inv(I)
 		statusLabel.text = "Found " + str(I.Uses) + " ammo!"
 		notiTimer.start()
 	elif type == "c":
@@ -835,7 +881,7 @@ func _handle_player_interaction(type, loc, array):
 			I.Uses = 12
 			I.Value = 2
 			I.Type = "Long"
-			player.Inv.append(I)
+			_add_item_to_player_inv(I)
 			statusLabel.text = "Looted Bow! Fire with X!"
 			notiTimer.start()
 	elif type == "D":
@@ -851,7 +897,7 @@ func _handle_player_interaction(type, loc, array):
 					T += "nothing!"
 				else:
 					for item in Body.Inv:
-						player.Inv.append(item)
+						_add_item_to_player_inv(item)
 						T += item.Char
 				print(player.Inv)
 				statusLabel.text = T
@@ -877,7 +923,7 @@ func _grab_weapon(Char):
 			I.Uses = 6
 			I.Value = 1
 			I.Type = "Straight"
-			player.Inv.append(I)
+			_add_item_to_player_inv(I)
 			statusLabel.text = "Looted Bow! Fire with X!"
 			notiTimer.start()
 
@@ -890,6 +936,14 @@ func _grab_armor(Char):
 			pass
 		"B":
 			pass
+
+func _add_item_to_player_inv(item):
+	var inventory = player.Inv
+	for spot in inventory:
+		if item.Char == spot.Char and item.Type == spot.Type:
+			spot.Uses += item.Uses
+			return
+	inventory.append(item)
 
 func _show_inv(shownPage):
 	currentPageShown = shownPage
@@ -929,6 +983,7 @@ func _show_inv(shownPage):
 		text = "Your inventory is empty!"
 	levelLabel.text = text
 	waiting = true
+	waitingOn = "Inventory"
 		
 
 func _get_item_name(Char, Type) -> String:
@@ -993,7 +1048,7 @@ func _find_and_use_item(Item, Actor):
 				if spot.Char == Item:
 #					print("OK!")
 					if Item == "+":
-						Actor.HP += Item.Value
+						Actor.HP += spot.Value
 						print(Actor.Char + " healed to: " + str(Actor.HP))
 					elif Item == "Z":
 						scrollUse = spot.Type
@@ -1028,6 +1083,7 @@ func _spawn_item_inside_container(containerInv : Array, containerType):
 				Item.Char = "+"
 				Item.Type = "Lesser"
 				Item.Uses = 2
+				Item.Value = 1
 			1:
 				Item.Char = "Z"
 				Item.Type = "Lightning"
@@ -1245,7 +1301,8 @@ func _clean_pasted_text(text:String) -> String:
 			if longestTextLength > 24:
 				$VSplitContainer/StatusLabel.text = "Max Columns: " + str(longestTextLength) + "/24"
 				$NotificationTimer.start()
-				return ""
+				line = line.substr(0,24)
+				longestTextLength = 24
 	for line in c:
 		if line.length() < longestTextLength:
 			for spot in range(longestTextLength - line.length()):

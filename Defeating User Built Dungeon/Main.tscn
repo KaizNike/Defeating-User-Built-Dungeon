@@ -9,8 +9,8 @@ script = ExtResource( 1 )
 game_save_class = ExtResource( 3 )
 
 [node name="VSplitContainer" type="VSplitContainer" parent="."]
-anchor_right = 1.0
-anchor_bottom = 1.0
+margin_right = 1024.0
+margin_bottom = 600.0
 dragger_visibility = 2
 __meta__ = {
 "_edit_use_anchors_": false
@@ -45,7 +45,24 @@ text = "1 . . . . . . . . X"
 clip_text = true
 
 [node name="NotificationTimer" type="Timer" parent="."]
-wait_time = 4.0
+wait_time = 6.5
 one_shot = true
+
+[node name="TextEdit" type="TextEdit" parent="."]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_fonts/font = ExtResource( 2 )
+text = "######################
+#@            <#>    #
+#Dx#############n  r #
+#n  r  n  x  r  n    #
+######################"
+highlight_current_line = true
+show_line_numbers = true
+draw_spaces = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
