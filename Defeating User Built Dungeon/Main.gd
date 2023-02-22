@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 13, 0, "-alpha"]
-# Level/Text Editor Update
+var version = [0, 14, 0, "-alpha"]
+# Controls List (?)
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -185,11 +185,13 @@ func _input(event):
 #	Everything that causes input to be ignored
 	if event is InputEventMouseMotion or (waiting and waitingOn == "Quit"):
 		return
-	print(escaping)
+#	print(escaping)
 	if event.is_action_pressed("escape"):
-		if waiting and waitingOn == "Inventory":
+		if waiting and waitingOn == "Inventory" or waitingOn == "Help":
 			_display_array(game_array)
 			_status_bar_update()
+			waiting = false
+			waitingOn = ""
 			return
 		statusLabel.text = "Escape again to quit."
 		if escaping:
@@ -239,11 +241,34 @@ func _input(event):
 			else:
 				_show_inv(currentPageShown - 1)
 		return
+#		WORKING ON
+	elif (waiting and waitingOn == "Help") and (event.is_action_pressed("ui_page_down") or event.is_action_pressed("ui_page_up")):
+		if event.is_action_pressed("ui_page_down"):
+			if currentPageShown == numOfPages:
+				_show_help(currentPageShown)
+				return
+			else:
+				_show_help(currentPageShown + 1)
+			return
+		if event.is_action_pressed("ui_page_up"):
+			if currentPageShown == 1:
+				_show_help(currentPageShown)
+				return
+			else:
+				_show_help(currentPageShown - 1)
+		return
 #	if event is InputEventKey and event.scancode == KEY_SHIFT:
 #		print("shift")
 #	print(_get_text_as_array(OS.clipboard))
 #	Ignores inputs past essential ones
 	if frozenInputs:
+		return
+	if event.is_action_pressed("help"):
+		waiting = true
+		waitingOn = "Help"
+		print(waitingOn)
+		currentPageShown = 1
+		_show_help(currentPageShown)
 		return
 	if waiting and event.is_pressed():
 		pageSelect = false
@@ -347,7 +372,8 @@ func _input(event):
 		notiTimer.start()
 		return
 	elif event.is_action_pressed("inventory"):
-		_show_inv(1)
+		currentPageShown = 1
+		_show_inv(currentPageShown)
 	elif event.is_action_pressed("heal"):
 		if _find_and_use_item("+", player):
 			statusLabel.text = "You heal to " + str(player.HP) + "."
@@ -944,6 +970,30 @@ func _add_item_to_player_inv(item):
 			spot.Uses += item.Uses
 			return
 	inventory.append(item)
+
+func _show_help(shownPage):
+	currentPageShown = shownPage
+	print("Starting Help + " + str(shownPage) + " Paged.")
+	numOfPages = 4
+	var text = ""
+	var altText = ""
+	match shownPage:
+		1:
+			text += "Movement:\nNorth: W, Up Arrow\nSouth: S, Down Arrow\nWest: A, Left Arrow\nEast: D, Right Arrow\nWait: . 'Period'"
+			altText += "Page 1/4, Page down for more"
+		2:
+			text += "Items:\nOpen Inventory: I\nHeal: + 'Plus'\nScroll: Z\nFire: X + Keypad"
+			altText += "Page 2/4, Page down for more"
+		3:
+			text += "Level editing:\nEnter level editor: ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V"
+			altText += "Page 3/4, Page down for more"
+		4:
+			text += "System:\nQuit: Esc\nReset Level: R\nRestart Game: Shift + R\nDark Mode: Shift + D\nVersion Display: V"
+			altText += "Page 4/4, Page up for more"
+	print(text)
+	levelLabel.text = text
+	statusLabel.text = altText
+	pass
 
 func _show_inv(shownPage):
 	currentPageShown = shownPage
