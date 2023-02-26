@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 14, 0, "-alpha"]
-# Controls List (?)
+var version = [0, 14, 1, "-alpha"]
+# Controls List (?) - Fix Inputs for HTML
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -185,6 +185,7 @@ func _input(event):
 #	Everything that causes input to be ignored
 	if event is InputEventMouseMotion or (waiting and waitingOn == "Quit"):
 		return
+	print(event.as_text())
 #	print(escaping)
 	if event.is_action_pressed("escape"):
 		if waiting and waitingOn == "Inventory" or waitingOn == "Help":
@@ -985,7 +986,7 @@ func _show_help(shownPage):
 			text += "Items:\nOpen Inventory: I\nHeal: + 'Plus'\nScroll: Z\nFire: X + Keypad"
 			altText += "Page 2/4, Page down for more"
 		3:
-			text += "Level editing:\nEnter level editor: ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V"
+			text += "Level editing:\nEnter level editor: L or ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V"
 			altText += "Page 3/4, Page down for more"
 		4:
 			text += "System:\nQuit: Esc\nReset Level: R\nRestart Game: Shift + R\nDark Mode: Shift + D\nVersion Display: V"
