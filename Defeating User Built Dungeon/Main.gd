@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 14, 1, "-alpha"]
-# Controls List (?) - Fix Inputs for HTML
+var version = [0, 14, 2, "-alpha"]
+# Tiles List with F2 or "
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -214,6 +214,8 @@ func _input(event):
 #		Copy current level to editor
 		if textEdit.visible:
 			textEdit.text = levelLabel.text
+			if not game_array:
+				textEdit.text = ""
 	if event.is_action_pressed("save_level") and textEdit.visible:
 #		Save level and present
 		var take = _clean_pasted_text(textEdit.text)
@@ -243,7 +245,7 @@ func _input(event):
 				_show_inv(currentPageShown - 1)
 		return
 #		WORKING ON
-	elif (waiting and waitingOn == "Help") and (event.is_action_pressed("ui_page_down") or event.is_action_pressed("ui_page_up")):
+	elif (waiting and waitingOn == "Help" or waitingOn == "Tile Help") and (event.is_action_pressed("ui_page_down") or event.is_action_pressed("ui_page_up")):
 		if event.is_action_pressed("ui_page_down"):
 			if currentPageShown == numOfPages:
 				_show_help(currentPageShown)
@@ -267,6 +269,13 @@ func _input(event):
 	if event.is_action_pressed("help"):
 		waiting = true
 		waitingOn = "Help"
+		print(waitingOn)
+		currentPageShown = 1
+		_show_help(currentPageShown)
+		return
+	if event.is_action_pressed("tile_help"):
+		waiting = true
+		waitingOn = "Tile Help"
 		print(waitingOn)
 		currentPageShown = 1
 		_show_help(currentPageShown)
@@ -460,7 +469,7 @@ func _input(event):
 					return
 				index += 1
 			if currentRoom > -1:
-				levelLabel.text = "Press '~' to enter level editor, or drag'n'drop or copy'n'paste a level in!"
+				levelLabel.text = "Press '~' or 'L' to enter level editor (Ctrl+S to save), or drag'n'drop or copy'n'paste a level in!"
 				if OS.get_name() == "HTML5":
 					levelLabel.text += " On web you may need to use the browser's Edit -> Paste."
 				statusLabel.text = "World is empty."
@@ -978,19 +987,44 @@ func _show_help(shownPage):
 	numOfPages = 4
 	var text = ""
 	var altText = ""
-	match shownPage:
-		1:
-			text += "Movement:\nNorth: W, Up Arrow\nSouth: S, Down Arrow\nWest: A, Left Arrow\nEast: D, Right Arrow\nWait: . 'Period'"
-			altText += "Page 1/4, Page down for more"
-		2:
-			text += "Items:\nOpen Inventory: I\nHeal: + 'Plus'\nScroll: Z\nFire: X + Keypad"
-			altText += "Page 2/4, Page down for more"
-		3:
-			text += "Level editing:\nEnter level editor: L or ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V"
-			altText += "Page 3/4, Page down for more"
-		4:
-			text += "System:\nQuit: Esc\nReset Level: R\nRestart Game: Shift + R\nDark Mode: Shift + D\nVersion Display: V"
-			altText += "Page 4/4, Page up for more"
+	if waitingOn == "Help":
+		match shownPage:
+			1:
+				text += "Movement:\nNorth: W, Up Arrow\nSouth: S, Down Arrow\nWest: A, Left Arrow\nEast: D, Right Arrow\nWait: . 'Period'"
+				altText += "Page 1/4, Page down for more"
+			2:
+				text += "Items:\nOpen Inventory: I\nHeal: + 'Plus'\nScroll: Z\nFire: X + Keypad"
+				altText += "Page 2/4, Page down for more"
+			3:
+				text += "Level editing:\nEnter level editor: L or ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V"
+				altText += "Page 3/4, Page down for more"
+			4:
+				text += "System:\nQuit: Esc\nReset Level: R\nRestart Game: Shift + R\nDark Mode: Shift + D\nVersion Display: V"
+				altText += "Page 4/4, Page up for more"
+	elif waitingOn == "Tile Help":
+		match shownPage:
+			1:
+				text += "Interactables:\n"
+				for Char in INTERACTS:
+					text += Char
+				altText += "Page 1/4, Page down for more"
+			2:
+				text += "Collidables:\n"
+				for Char in COLLIDES:
+					text += Char
+				altText += "Page 2/4, Page down for more"
+			3:
+				text += "Beings:\n"
+				for Char in ENTITIES:
+					text += Char
+				altText += "Page 3/4, Page down for more"
+			4:
+				text += "Weapons:\n"
+				for Char in WEAPONS:
+					text += Char
+				for Char in RANGED:
+					text += Char
+				altText += "Page 4/4, Page up for more"
 	print(text)
 	levelLabel.text = text
 	statusLabel.text = altText

@@ -52,6 +52,7 @@ one_shot = true
 visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
+hint_tooltip = "Exit with ~ or L then Press F2 or \" for Tiles"
 custom_fonts/font = ExtResource( 2 )
 text = "######################
 #@            <#>    #
