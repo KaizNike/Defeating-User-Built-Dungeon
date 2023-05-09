@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 14, 2, "-alpha"]
-# Tiles List with F2 or "
+var version = [0, 14, 3, "-alpha"]
+# Fix movement on saving
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -231,6 +231,7 @@ func _input(event):
 		opposite = !opposite
 		frozenInputs = opposite
 		textEdit.visible = opposite
+		return
 	if (waiting and pageSelect) and (event.is_action_pressed("ui_page_down") or event.is_action_pressed("ui_page_up")):
 		if event.is_action_pressed("ui_page_down"):
 			if currentPageShown == numOfPages:
