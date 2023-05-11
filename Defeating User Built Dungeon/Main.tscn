@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://Font.tres" type="DynamicFont" id=2]
 [ext_resource path="res://Save_Script.gd" type="Script" id=3]
+[ext_resource path="res://CellularMusicChatGPT/CellMusicChatGPT3.tscn" type="PackedScene" id=4]
 
 [node name="Main" type="Node"]
 script = ExtResource( 1 )
@@ -62,5 +63,7 @@ draw_spaces = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="CellMusicChatGPT3" parent="." instance=ExtResource( 4 )]
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]

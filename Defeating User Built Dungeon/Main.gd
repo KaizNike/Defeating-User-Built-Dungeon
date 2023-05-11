@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 14, 3, "-alpha"]
-# Fix movement on saving
+var version = [0, 15, 0, "-alpha"]
+# Look and Generative Music
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -25,6 +25,9 @@ var isDarkMode = false
 var pageSelect = false
 var firing = false
 var opposite = false
+var is_muted = false
+var lookLocation = Vector2.ZERO
+var oldLook = ""
 var currentPageShown = 1
 var numOfPages = 0
 var notificationType = "status"
@@ -52,6 +55,7 @@ const RoomsStore = ["""
 """]
 
 var game_array = []
+var temp_game_array = []
 
 # ">" - Down Stair*, "<" - Up Stair*, "Y" - Door Key*, "y" - Chest Key*, "D" - Door*, "K" - Skeleton Key*, "%" - Body*, "+" - Healing Potion*, "c" - Chest
 const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c", "-"]
@@ -85,6 +89,21 @@ const ARMORS = ["O", "P", "B"]
 # "-" - Arrow
 const PROJECTILES = ["-"]
 
+const ALL = {"#": "Wall."," ": "Floor.", ".": "You walked here.",
+# Interacts
+">": "Down Stair", "<": "Up Stair", "Y": "Door Key", "y": "Chest Key", "D": "a locked door", "K": "Skeleton Key", "%": "Body", "+": "Healing Potion", "c": "Chest",
+# Entities
+"r": "Rat", "n": "Dingo", "k": "Kobold", "g": "Goblin", "L": "Lich", "@": "You.", "x": "Crate",
+# Weapons
+"T": "Sword", "S": "Whip", "Z": "Scroll", "V": "Shovel", "E": "Trident",
+# Ranged
+"B": "Bow",
+# Projectiles,
+"-": "Arrow",
+# Armors
+"O": "Shield", "P": "Platemail", "H": "Boots"
+}
+
 var item = {"Char": "", "Uses": 1, "Type": "Normal", "Value": 0}
 var scrollUse = ""
 
@@ -115,7 +134,7 @@ func _ready():
 		_actors_init(game_array)
 		scoring = scoringOrig.duplicate(true)
 		save_game(autosaveLoc)
-		levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
+		levelLabel.text = "You are hunting L on floor X,\n do not fail us!" + "\nPress F1 or question mark for help!"
 		statusLabel.text = "Press Anything"
 		waiting = true
 		waitingOn = "Start"
@@ -131,7 +150,7 @@ func _ready():
 			xindex = 0
 			yindex += 1
 		_actors_init(game_array)
-		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1)
+		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!"
 		statusLabel.text = "Press Anything"
 		waiting = true
 		waitingOn = "Start"
@@ -149,6 +168,7 @@ func _actors_init(array):
 				_being_init(Vector2(x,y),array[y][x])
 	if actors.size() > 1:
 		actors.sort_custom(SortingActors, "sort_descending")
+		$CellMusicChatGPT3.init_automatons(actors,Vector2(game_array[0].size(), game_array.size()))
 	print(actors)
 	
 # TODO
@@ -185,6 +205,7 @@ func _input(event):
 #	Everything that causes input to be ignored
 	if event is InputEventMouseMotion or (waiting and waitingOn == "Quit"):
 		return
+	var dir = Vector2(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
 	print(event.as_text())
 #	print(escaping)
 	if event.is_action_pressed("escape"):
@@ -205,7 +226,23 @@ func _input(event):
 				get_tree().quit(0)
 		escaping = true
 		return
+	if event.is_action_pressed("mute"):
+		var master_sound = AudioServer.get_bus_index("Master")
+		var isMusicOn = !AudioServer.is_bus_mute(master_sound)
+		AudioServer.set_bus_mute(master_sound,isMusicOn)
+		is_muted = !is_muted
 #		pass
+	if waitingOn == "Look" and event.is_pressed():
+		_handle_look(event, dir)
+		return
+	if event.is_action_pressed("look"):
+		waitingOn = "Look"
+		waiting = true
+		lookLocation = player["Loc"]
+		temp_game_array = game_array.duplicate(true)
+		_handle_look(event, Vector2.ZERO)
+		oldLook = "@"
+		return
 	if event.is_action_pressed("enter_level_editor"):
 		$VSplitContainer.visible = opposite
 		opposite = !opposite
@@ -292,7 +329,9 @@ func _input(event):
 		_status_bar_update()
 		escaping = false
 	elif firing and event.is_pressed():
-		if _handle_move_input(event):
+		var fireDir = Vector2(event.get_action_strength("fire_right") - event.get_action_strength("fire_left"), event.get_action_strength("fire_down") - event.get_action_strength("fire_up"))
+		print(fireDir)
+		if not fireDir and _handle_move_input(event):
 			firing = false
 			statusLabel.text = "Firing cancelled."
 			notiTimer.start()
@@ -611,6 +650,29 @@ func _process_turn(array, dir):
 #				levelLabel.text += "\nYou leave the dungeon."
 				levelLabel.text += "\nScores:\n" + "Time: " + str(scoring['Time (s)']) + "\nSteps: " + str(scoring.Steps) + "\nKills:\n" + str(scoring.Kills)
 		
+
+func _handle_look(event, dir):
+	var TTStext = ""
+	lookLocation += dir
+	if lookLocation.x < 0 or lookLocation.x > temp_game_array[0].size() - 1 or lookLocation.y < 0 or lookLocation.y >temp_game_array.size() - 1:
+		statusLabel.text + "You see: " + "the bounds."
+		lookLocation -= dir
+		notificationType = "status"
+		notiTimer.start()
+		return
+	print(temp_game_array[lookLocation.y][lookLocation.x])
+	if temp_game_array[lookLocation.y][lookLocation.x] in ALL.keys():
+		statusLabel.text = "You see: " +  str(ALL[temp_game_array[lookLocation.y][lookLocation.x]])
+	else:
+		statusLabel.text = "You can't recognize that."
+	temp_game_array[lookLocation.y-dir.y][lookLocation.x-dir.x] = oldLook
+	if temp_game_array[lookLocation.y-dir.y][lookLocation.x-dir.x] == "":
+		temp_game_array[lookLocation.y-dir.y][lookLocation.x-dir.x] = " "
+	notificationType = "status"
+	notiTimer.start()
+	oldLook = temp_game_array[lookLocation.y][lookLocation.x]
+	temp_game_array[lookLocation.y][lookLocation.x] = "?"
+	_display_array(temp_game_array)
 
 func _handle_move_input(event) -> bool:
 	var dir = Vector2(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
@@ -992,16 +1054,19 @@ func _show_help(shownPage):
 		match shownPage:
 			1:
 				text += "Movement:\nNorth: W, Up Arrow\nSouth: S, Down Arrow\nWest: A, Left Arrow\nEast: D, Right Arrow\nWait: . 'Period'"
-				altText += "Page 1/4, Page down for more"
+				altText += "Page 1/5, Page down for more"
+			2:
+				text += "Gameplay:\nLook: K, Mute Sound: F3, | 'Pipe'"
+				altText += "Page 2/5, Page down for more"
 			2:
 				text += "Items:\nOpen Inventory: I\nHeal: + 'Plus'\nScroll: Z\nFire: X + Keypad"
-				altText += "Page 2/4, Page down for more"
+				altText += "Page 3/5, Page down for more"
 			3:
 				text += "Level editing:\nEnter level editor: L or ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V"
-				altText += "Page 3/4, Page down for more"
+				altText += "Page 4/5, Page down for more"
 			4:
 				text += "System:\nQuit: Esc\nReset Level: R\nRestart Game: Shift + R\nDark Mode: Shift + D\nVersion Display: V"
-				altText += "Page 4/4, Page up for more"
+				altText += "Page 5/5, Page up for more"
 	elif waitingOn == "Tile Help":
 		match shownPage:
 			1:
