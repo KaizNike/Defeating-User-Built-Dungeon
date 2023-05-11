@@ -134,7 +134,7 @@ func _ready():
 		_actors_init(game_array)
 		scoring = scoringOrig.duplicate(true)
 		save_game(autosaveLoc)
-		levelLabel.text = "You are hunting L on floor X,\n do not fail us!"
+		levelLabel.text = "You are hunting L on floor X,\n do not fail us!" + "\nPress F1 or question mark for help!"
 		statusLabel.text = "Press Anything"
 		waiting = true
 		waitingOn = "Start"
@@ -150,7 +150,7 @@ func _ready():
 			xindex = 0
 			yindex += 1
 		_actors_init(game_array)
-		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1)
+		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!"
 		statusLabel.text = "Press Anything"
 		waiting = true
 		waitingOn = "Start"
@@ -329,7 +329,9 @@ func _input(event):
 		_status_bar_update()
 		escaping = false
 	elif firing and event.is_pressed():
-		if _handle_move_input(event):
+		var fireDir = Vector2(event.get_action_strength("fire_right") - event.get_action_strength("fire_left"), event.get_action_strength("fire_down") - event.get_action_strength("fire_up"))
+		print(fireDir)
+		if not fireDir and _handle_move_input(event):
 			firing = false
 			statusLabel.text = "Firing cancelled."
 			notiTimer.start()
