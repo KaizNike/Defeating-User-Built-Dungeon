@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://CellularMusicChatGPT/CellMusicChatGPT3.gd" type="Script" id=1]
+
+[sub_resource type="AudioStreamGenerator" id=1]
+
+[node name="CellMusicChatGPT3" type="AudioStreamPlayer"]
+stream = SubResource( 1 )
+volume_db = -8.0
+pitch_scale = 0.8
+script = ExtResource( 1 )

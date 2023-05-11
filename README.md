@@ -4,8 +4,8 @@
 
 ![Banner Fifth Version, A Dungeon with many rats](.//v0.7-alpha-screen4.png)
 
-## Current Version v0.12.2-alpha
-Added fireable projectiles for player.
+## Current Version v0.15-alpha
+Rudimentary music and looking around with "K".
 
 ## Made For
 [r/roguelikedev](https://www.reddit.com/r/roguelikedev/)'s 2021 Run of the [Complete Roguelike Tutorial](http://rogueliketutorials.com/)
@@ -14,7 +14,7 @@ Added fireable projectiles for player.
 Make a 'moddable' roguelike in Godot.
 
 ## Making a Map
-For a map to be accepted, it must be the same width in characters (subject to change.) Important characters are '#' for walls, '@' for you player, and '>' to proceed to next level. More characters are hoped to be added later. Currently 'Y', 'D', 'r', and 'X' all have a use.
+Important characters are '#' for walls, '@' for you player, and '>' to proceed to next level. More characters are hoped to be added later. Currently 'Y', 'D', 'r', and 'X' all have a use.
 
 ## How to Contribute
 This is mainly a personal learning project, so create issues, enter discussion, or make your own fork.
