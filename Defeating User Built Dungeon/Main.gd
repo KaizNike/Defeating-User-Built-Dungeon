@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 15, 0, "-alpha"]
-# Look and Generative Music
+var version = [0, 15, 1, "-alpha"]
+# Update to remove text to speech
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -38,16 +38,14 @@ export (Script) var game_save_class
 
 var Rooms = []
 
-const RoomsStore = ["""
-#############
+const RoomsStore = ["""#############
 #@         x#
 #        n Y#
 ##D##########
 #<r        >#
 #############
 """,
-"""
-#############
+"""#############
 #OY#      #O#
 # ##     L# #
 #@ D      D #
