@@ -25,8 +25,8 @@ var output_history = []
 
 func _ready():
 	randomize()
-	if OS.get_name() == "HTML5":
-		buffer_size -= 30000
+#	if OS.get_name() == "HTML5":
+#		buffer_size -= 30000
 	# Initialize automaton, scale, and notes arrays
 	for i in range(64):
 #		automaton.append(0)
