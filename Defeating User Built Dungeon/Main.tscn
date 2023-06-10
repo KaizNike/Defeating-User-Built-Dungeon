@@ -65,5 +65,6 @@ __meta__ = {
 }
 
 [node name="CellMusicChatGPT3" parent="." instance=ExtResource( 4 )]
+volume_db = -80.0
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]

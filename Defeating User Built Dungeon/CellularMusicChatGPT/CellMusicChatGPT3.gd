@@ -72,6 +72,7 @@ func _ready():
 
 func init_automatons(actorsArray : Array, cells : Vector2) -> bool:
 	automaton.clear()
+	clear_buffer()
 	for i in cells.y:
 		for j in cells.x:
 			automaton.append(0)
@@ -130,7 +131,10 @@ func set_cutoff_freq(freq: float):
 	cutoff_freq = freq
 	update_alpha()
 
-
+func clear_buffer():
+	buffer.clear()
+	for i in range(buffer_size):
+		buffer.append(Vector2.ZERO)
 
 func _fill_buffer():
 	if not automaton:
