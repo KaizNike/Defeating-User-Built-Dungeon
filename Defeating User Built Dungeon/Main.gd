@@ -225,6 +225,7 @@ func _input(event):
 			waitingOn = ""
 			return
 		statusLabel.text = "Escape again to quit."
+		OS.tts_speak(statusLabel.text, voice[0])
 		if escaping:
 			if OS.get_name() == "HTML5":
 				levelLabel.text = ""
