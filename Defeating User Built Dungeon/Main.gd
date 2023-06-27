@@ -2,8 +2,9 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 16, 0, "-alpha"]
+var version = [0, 16, 1, "-alpha"]
 # Accessibilty - Text To Speech Update
+# Patch 1 - Fix Missing help page
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -321,6 +322,8 @@ func _input(event):
 		waitingOn = "Help"
 		print(waitingOn)
 		currentPageShown = 1
+#		Update with pages
+		numOfPages = 5
 		_show_help(currentPageShown)
 		return
 	if event.is_action_pressed("tile_help"):
@@ -328,6 +331,8 @@ func _input(event):
 		waitingOn = "Tile Help"
 		print(waitingOn)
 		currentPageShown = 1
+#		Update with tiles pages
+		numOfPages = 4
 		_show_help(currentPageShown)
 		return
 #	All waits before here
@@ -1178,7 +1183,6 @@ func _add_item_to_player_inv(item):
 func _show_help(shownPage):
 	currentPageShown = shownPage
 	print("Starting Help + " + str(shownPage) + " Paged.")
-	numOfPages = 4
 	var text = ""
 	var altText = ""
 	if waitingOn == "Help":
@@ -1189,13 +1193,13 @@ func _show_help(shownPage):
 			2:
 				text += "Gameplay:\nLook: K\nMute Sound: F3, | 'Pipe'"
 				altText += "Page 2/5, Page down for more"
-			2:
+			3:
 				text += "Items:\nOpen Inventory: I\nHeal: + 'Plus'\nScroll: Z\nFire: X + Keypad"
 				altText += "Page 3/5, Page down for more"
-			3:
+			4:
 				text += "Level editing:\nEnter level editor: L or ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V"
 				altText += "Page 4/5, Page down for more"
-			4:
+			5:
 				text += "System:\nQuit: Esc\nReset Level: R\nRestart Game: Shift + R\nDark Mode: Shift + D\nVersion Display: V"
 				altText += "Page 5/5, Page up for more"
 	elif waitingOn == "Tile Help":
