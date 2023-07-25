@@ -9,7 +9,7 @@ var automaton_rule = 28
 var steps = randi() % 128 + 1
 
 var low_pass_filter
-var cutoff_freq = 3000.0
+var cutoff_freq = 12000.0
 
 var automaton = []
 var scale = []
@@ -17,9 +17,13 @@ var notes = []
 var buffer = PoolVector2Array()
 var input_history = []
 var output_history = []
+var openFile = File.new()
+var Stream = AudioStreamOGGVorbis.new()
+var reading = false
 
 func _ready():
 	randomize()
+	get_tree().connect("files_dropped", self, "_files_dropped")
 	for i in range(64):
 		scale.append(i)
 		notes.append(60 + i % 12)
@@ -46,7 +50,11 @@ func init_automatons(actorsArray : Array, cells : Vector2) -> bool:
 	return true
 
 func _process(delta):
-	_fill_buffer()
+	if reading:
+#		var Buffer = openFile.get_buffer(buffer_size)
+		pass
+	else:
+		_fill_buffer()
 
 
 var output = 0.0
@@ -54,6 +62,24 @@ var alpha = 0.0
 
 func _init():
 	update_alpha()
+
+func _files_dropped(files, screen):
+	var fileIndex = 0
+	var extensions = "ogg"
+	for file in files:
+		if fileIndex > 1:
+			print("Only one music for now.")
+			return
+		if file.get_extension() != extensions:
+			continue
+		self.playing = false
+#		openFile = file
+		openFile.open(file, File.READ)
+		Stream.set_data(openFile.get_buffer(openFile.get_len()))
+		self.stream = Stream
+		fileIndex += 1
+		reading = true
+	self.playing = true
 
 func update_alpha():
 	var dt = 1.0 / sample_rate

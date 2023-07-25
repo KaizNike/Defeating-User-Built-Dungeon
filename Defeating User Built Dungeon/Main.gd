@@ -2,9 +2,9 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 16, 1, "-alpha"]
+var version = [0, 16, 2, "-alpha"]
 # Accessibilty - Text To Speech Update
-# Patch 1 - Fix Missing help page
+# Patch 2 - Supports Drag n Drop .OGG
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -777,6 +777,10 @@ func _move_player(array, dir, actor) -> Array:
 	if Dest in INTERACTS or Dest in ENTITIES:
 		a = _handle_player_interaction(Dest, Loc, array)
 	if Dest in COLLIDES or Dest in ENTITIES:
+		if Dest in COLLIDES:
+			statusLabel.text = "You feel: " + str(ALL[Dest])
+			if not is_muted:
+				OS.tts_speak("You feel: " + ALL[Dest], voice[0])
 		return array
 	if Dest in WEAPONS:
 		_grab_weapon(Dest)
