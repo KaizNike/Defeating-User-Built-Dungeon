@@ -2,9 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 16, 2, "-alpha"]
-# Accessibilty - Text To Speech Update
-# Patch 2 - Supports Drag n Drop .OGG
+var version = [0, 17, 0, "-alpha"]
+# Examinination, Accessibility 2
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -19,7 +18,9 @@ var voice = OS.tts_get_voices_for_language("en")
 var currentRoom = 0
 var levelChange = false
 var waiting = false
+# waitingOn: can be, Start, Quit, Inventory, Help, Look, or Tile Help
 var waitingOn = ""
+var alreadyLooking = false
 var frozenInputs = false
 var levelDiff = 0
 var resetting = false
@@ -61,14 +62,14 @@ const RoomsStore = ["""
 var game_array := []
 var temp_game_array := []
 
-# ">" - Down Stair*, "<" - Up Stair*, "Y" - Door Key*, "y" - Chest Key*, "D" - Door*, "K" - Skeleton Key*, "%" - Body*, "+" - Healing Potion*, "c" - Chest
-const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c", "-"]
-# "#" - Wall*, "D" - Locked Door*, "X" - Old Wall*
-const COLLIDES = ["#", "D", "X"]
+# ">" - Down Stair*, "<" - Up Stair*, "Y" - Door Key*, "y" - Chest Key*, "D" - Door*, "K" - Skeleton Key*, "%" - Body*, "+" - Healing Potion*, "c" - Chest, "*" - Secret
+const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c", "-", "*"]
+# "#" - Wall*, "D" - Locked Door*, "X" - Old Wall*, "*" - Secret
+const COLLIDES = ["#", "D", "X", "*"]
 # "r" - Rat*, "n" - DiNgo*, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player*, "x" - Crate*, "c": Chest
 const ENTITIES = ["r", "n", "k", "g", "L", "@", "x", "c"]
 
-const ALL = {"#": "Wall."," ": "Floor.", ".": "You walked here.",
+const ALL = {"#": "Wall"," ": "Floor", ".": "You walked here",
 # Interacts
 ">": "Down Stair", "<": "Up Stair", "Y": "Door Key", "y": "Chest Key", "D": "a locked door", "K": "Skeleton Key", "%": "Body", "+": "Healing Potion", "c": "Chest",
 # Entities
@@ -146,6 +147,8 @@ func _ready():
 	else:
 #		Reload autosave
 		game_array = _get_text_as_array(Rooms[currentRoom])
+#		var mine = _return_array_to_text(game_array)
+#		_stack_alike_strings(mine)
 		var yindex = 0
 		var xindex = 0
 		for y in game_array:
@@ -217,9 +220,10 @@ func _input(event):
 	print(event.as_text())
 #	print(escaping)
 	if event.is_action_pressed("escape"):
-		if waiting and waitingOn == "Inventory" or waitingOn == "Help" or waitingOn == "Look":
-			if waitingOn == "Look":
+		if waiting and waitingOn == "Inventory" or waitingOn == "Help" or waitingOn == "Look" or waitingOn == "Examination":
+			if waitingOn == "Look" or waitingOn == "Examination":
 				temp_game_array.clear()
+				alreadyLooking = false
 			_display_array(game_array)
 			_status_bar_update()
 			waiting = false
@@ -244,18 +248,21 @@ func _input(event):
 		var isMusicOn = !AudioServer.is_bus_mute(master_sound)
 		AudioServer.set_bus_mute(master_sound,isMusicOn)
 		is_muted = !is_muted
+	if waitingOn == "Examination" and dir:
+		waitingOn = "Look"
 	if waitingOn == "Look" and event.is_pressed():
 		_handle_look(event, dir)
 		return
-	if event.is_action_pressed("look"):
+	if event.is_action_pressed("look") and not alreadyLooking:
 		waitingOn = "Look"
 		waiting = true
 		lookLocation = player["Loc"]
 		temp_game_array = game_array.duplicate(true)
 		if not is_muted:
-			OS.tts_speak("You begin examining around, press escape to cancel.", voice[0])
+			OS.tts_speak("You begin looking around, press escape to cancel.", voice[0])
 		_handle_look(event, Vector2.ZERO)
 		oldLook = "@"
+		alreadyLooking = true
 		return
 	if event.is_action_pressed("enter_level_editor") and not waitingOn:
 		$VSplitContainer.visible = opposite
@@ -311,6 +318,8 @@ func _input(event):
 			else:
 				_show_help(currentPageShown - 1)
 		return
+	if waitingOn == "Examination":
+		return
 #	if event is InputEventKey and event.scancode == KEY_SHIFT:
 #		print("shift")
 #	print(_get_text_as_array(OS.clipboard))
@@ -337,6 +346,7 @@ func _input(event):
 		return
 #	All waits before here
 	if waiting and event.is_pressed():
+		alreadyLooking = false
 		pageSelect = false
 		waiting = false
 		waitingOn = ""
@@ -715,6 +725,9 @@ func _process_turn(array, dir):
 func _handle_look(event, dir):
 	var TTStext = ""
 	lookLocation += dir
+	if alreadyLooking and event.is_action_pressed("look"):
+		_handle_examine(lookLocation)
+		return
 	if lookLocation.x < 0 or lookLocation.x > temp_game_array[0].size() - 1 or lookLocation.y < 0 or lookLocation.y >temp_game_array.size() - 1:
 		statusLabel.text + "You see: " + "the bounds."
 		if not is_muted:
@@ -726,7 +739,7 @@ func _handle_look(event, dir):
 	print(temp_game_array[lookLocation.y][lookLocation.x])
 	if temp_game_array[lookLocation.y][lookLocation.x] in ALL.keys():
 		statusLabel.text = "You see: " +  str(ALL[temp_game_array[lookLocation.y][lookLocation.x]])
-		TTStext = str(ALL[temp_game_array[lookLocation.y][lookLocation.x]])
+		TTStext = str("You look and see: "+ALL[temp_game_array[lookLocation.y][lookLocation.x]]+" @ "+str(Vector2(lookLocation.x,lookLocation.y)))
 	else:
 		statusLabel.text = "You can't recognize that."
 		TTStext = "You can't recognize that."
@@ -744,6 +757,36 @@ func _handle_look(event, dir):
 #		yield(get_tree(),"idle_frame")
 		OS.tts_speak(TTStext, voice[0])
 		
+# WORKING ON
+func _handle_examine(dest:Vector2):
+	var target = oldLook
+#	IF PLAYER LOOKS AT SELF
+	if target == "@":
+		statusLabel.text = "Via own eyes, floor: " + str(currentRoom + 1)
+		var text = _stack_alike_strings(_return_array_to_text(game_array))
+		if not is_muted:
+			OS.tts_speak((statusLabel.text+text), voice[0])
+			pass
+		pass
+#	IF PLAYER LOOKS AT SOMETHING
+	elif target in ENTITIES:
+		for actor in actors:
+			if actor.Char == target and actor.Loc == dest:
+				levelLabel.text = str(actor)
+				statusLabel.text = "Examining: " + actor.Char + " @ " + str(dest)
+				waitingOn = "Examination"
+				if not is_muted:
+					OS.tts_stop()
+					OS.tts_speak("You carefully examine this, " +str(actor),voice[0])
+					pass
+				break
+		pass
+#	HANDLE MORE THINGS
+	pass
+	
+
+func _handle_room_examine():
+	pass
 
 func _handle_move_input(event, dir) -> bool:
 	if dir != Vector2.ZERO or event.is_action_pressed("wait"):
@@ -1204,7 +1247,7 @@ func _show_help(shownPage):
 				text += "Level editing:\nEnter level editor: L or ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V"
 				altText += "Page 4/5, Page down for more"
 			5:
-				text += "System:\nQuit: Esc\nReset Level: R\nRestart Game: Shift + R\nDark Mode: Shift + D\nVersion Display: V"
+				text += "System:\nQuit or Back out: Escape\nReset Level: R\nRestart Game: Shift + R\nDark Mode: Shift + D\nVersion Display: V"
 				altText += "Page 5/5, Page up for more"
 	elif waitingOn == "Tile Help":
 		match shownPage:
@@ -1236,7 +1279,7 @@ func _show_help(shownPage):
 	if not is_muted:
 		OS.tts_stop()
 		yield(get_tree(),"idle_frame")
-		OS.tts_speak(text+altText, voice[0])
+		OS.tts_speak("Help: "+text+altText, voice[0])
 #		OS.tts_speak(altText, voice[0])
 		
 
@@ -1280,7 +1323,9 @@ func _show_inv(shownPage):
 		text = "Your inventory is empty!"
 	levelLabel.text = text
 	if not is_muted:
-		OS.tts_speak(text, voice[0])
+		OS.tts_stop()
+		yield(get_tree(),"idle_frame")
+		OS.tts_speak("Inventory: "+text, voice[0])
 	waiting = true
 	waitingOn = "Inventory"
 		
@@ -1552,6 +1597,14 @@ func _get_text_as_array(text : String):
 	return a
 #	pass
 
+func _return_array_to_text(a:Array) -> String:
+	var Return = ""
+	for row in a:
+		for Char in row:
+			Return += Char
+		Return += "\n"
+	print(Return)
+	return Return
 
 #func _get_array_as_text(text:String) -> Array:
 #	var array = []
@@ -1703,6 +1756,40 @@ func _fireBow(Actor, Dir):
 			statusLabel.text = "Missing: " + text
 			if not is_muted:
 				("Missing: " + text)
+
+func _stack_alike_strings(S:String) -> String:
+#	var input_array = [
+#		"#############",
+#		"#@         x",
+#		"#        n #",
+#		"##D#########",
+#		"#<r        >#",
+#	]
+
+	var output_array = []
+	var hold = S.split("\n")
+	for row in hold:
+		var stacked_row = []
+		var current_string = ""
+		for Char in row:
+#			if Char == "\n":
+#				continue
+			var translated_char = ALL[Char]
+			if current_string == "":
+				current_string = translated_char + " times 1"
+			elif current_string.find(translated_char) == 0:
+				var space_count = current_string.split(" times ")[1].to_int()
+				space_count += 1
+				current_string = translated_char + " times " + str(space_count)
+			else:
+				stacked_row.append(current_string)
+				current_string = translated_char + " times 1"
+		stacked_row.append(current_string)
+		stacked_row.append("Next row")
+		output_array.append(", ".join(stacked_row))
+
+	# Print the stacked arrays
+	return str(output_array)
 
 func _on_NotificationTimer_timeout():
 	match notificationType:
