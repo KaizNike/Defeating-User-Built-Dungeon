@@ -22,19 +22,20 @@ var Stream = AudioStreamOGGVorbis.new()
 var reading = false
 
 func _ready():
-	randomize()
-	get_tree().connect("files_dropped", self, "_files_dropped")
-	for i in range(64):
-		scale.append(i)
-		notes.append(60 + i % 12)
-	stream.mix_rate = sample_rate
-	for i in range(buffer_size):
-		buffer.append(Vector2.ZERO)
-	# Start playing audio stream
-	playback = get_stream_playback()
-	set_bus("Master")
-#	yield("init_automatons", "completed")
-	play()
+#	randomize()
+#	get_tree().connect("files_dropped", self, "_files_dropped")
+#	for i in range(64):
+#		scale.append(i)
+#		notes.append(60 + i % 12)
+#	stream.mix_rate = sample_rate
+#	for i in range(buffer_size):
+#		buffer.append(Vector2.ZERO)
+#	# Start playing audio stream
+#	playback = get_stream_playback()
+#	set_bus("Master")
+##	yield("init_automatons", "completed")
+#	play()
+	pass
 
 func init_automatons(actorsArray : Array, cells : Vector2) -> bool:
 	automaton.clear()
@@ -54,7 +55,8 @@ func _process(delta):
 #		var Buffer = openFile.get_buffer(buffer_size)
 		pass
 	else:
-		_fill_buffer()
+#		_fill_buffer()
+		pass
 
 
 var output = 0.0

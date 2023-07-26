@@ -783,10 +783,7 @@ func _handle_examine(dest:Vector2):
 		pass
 #	HANDLE MORE THINGS
 	pass
-	
 
-func _handle_room_examine():
-	pass
 
 func _handle_move_input(event, dir) -> bool:
 	if dir != Vector2.ZERO or event.is_action_pressed("wait"):
