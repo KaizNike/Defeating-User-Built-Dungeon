@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 17, 0, "-alpha"]
-# Examinination, Accessibility 2
+var version = [0, 18, 0, "-alpha"]
+# Level Editing, Accessibility 3
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -248,6 +248,12 @@ func _input(event):
 		var isMusicOn = !AudioServer.is_bus_mute(master_sound)
 		AudioServer.set_bus_mute(master_sound,isMusicOn)
 		is_muted = !is_muted
+	if event.is_action_pressed("look_while_level_editing") and textEdit.visible:
+		if is_muted:
+			print("Muted.")
+		else:
+			OS.tts_speak(_stack_alike_strings(textEdit.text), voice[0])
+			return
 	if waitingOn == "Examination" and dir:
 		waitingOn = "Look"
 	if waitingOn == "Look" and event.is_pressed():
@@ -271,9 +277,24 @@ func _input(event):
 		textEdit.visible = opposite
 #		Copy current level to editor
 		if textEdit.visible:
+			if not is_muted:
+				OS.tts_speak("Now level editing.", voice[0])
+			textEdit.grab_focus()
+			textEdit.text = ""
 			textEdit.text = levelLabel.text
 			if not game_array:
 				textEdit.text = ""
+			return
+		else:
+			$VSplitContainer/LevelLabel.grab_focus()
+			OS.tts_speak("No longer editing.", voice[0], 50, 1.0, 1.0, 0, true)
+	if event.is_action_released("ui_move") and textEdit.visible:
+		var loc = Vector2(textEdit.cursor_get_line(),textEdit.cursor_get_column())
+#		var line = textEdit.get_word_under_cursor()
+		var line = textEdit.get_line(loc.x)
+		print(str(loc)+" "+line)
+		if not is_muted:
+			OS.tts_speak(str(loc)+" "+ line,voice[0],50,1.0,1.0,0,true)
 	if event.is_action_pressed("save_level") and textEdit.visible:
 #		Save level and present
 		var take = _clean_pasted_text(textEdit.text)
@@ -1241,7 +1262,7 @@ func _show_help(shownPage):
 				text += "Items:\nOpen Inventory: I\nHeal: + 'Plus'\nScroll: Z\nFire: X + Keypad"
 				altText += "Page 3/5, Page down for more"
 			4:
-				text += "Level editing:\nEnter level editor: L or ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V"
+				text += "Level editing:\nEnter level editor: Ctrl + L or ~ 'Tilde'\nSave level: Ctrl + S\nPaste Level: Ctrl + V\nHear level: Ctrl + K  "
 				altText += "Page 4/5, Page down for more"
 			5:
 				text += "System:\nQuit or Back out: Escape\nReset Level: R\nRestart Game: Shift + R\nDark Mode: Shift + D\nVersion Display: V"
