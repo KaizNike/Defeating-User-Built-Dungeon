@@ -14,6 +14,10 @@ config/name="Defeating User Built Dungeon"
 run/main_scene="res://Main.tscn"
 config/icon="res://as/@icon2small.png"
 
+[audio]
+
+general/text_to_speech=true
+
 [display]
 
 window/size/resizable=false

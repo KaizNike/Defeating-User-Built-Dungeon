@@ -1,0 +1,49 @@
+[gd_scene format=2]
+
+[node name="PanelContainer" type="PanelContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="MusicPlaying" type="HBoxContainer" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 1017.0
+margin_bottom = 593.0
+
+[node name="CheckBox" type="CheckBox" parent="MusicPlaying"]
+margin_right = 43.0
+margin_bottom = 586.0
+text = "|>"
+
+[node name="Label" type="Label" parent="MusicPlaying"]
+margin_left = 47.0
+margin_top = 286.0
+margin_right = 844.0
+margin_bottom = 300.0
+size_flags_horizontal = 3
+text = "Title: Data Sound"
+
+[node name="LineEdit2" type="LineEdit" parent="MusicPlaying"]
+margin_left = 848.0
+margin_top = 281.0
+margin_right = 906.0
+margin_bottom = 305.0
+size_flags_vertical = 4
+text = "0.0"
+
+[node name="Label2" type="Label" parent="MusicPlaying"]
+margin_left = 910.0
+margin_top = 286.0
+margin_right = 948.0
+margin_bottom = 300.0
+text = "/ 0.0 /"
+
+[node name="LineEdit" type="LineEdit" parent="MusicPlaying"]
+margin_left = 952.0
+margin_top = 281.0
+margin_right = 1010.0
+margin_bottom = 305.0
+size_flags_vertical = 4
+text = "300.0"
+
+[node name="LineItemMusic" type="AudioStreamPlayer" parent="."]

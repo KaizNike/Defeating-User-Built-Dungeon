@@ -23,7 +23,7 @@ var reading = false
 
 func _ready():
 #	randomize()
-#	get_tree().connect("files_dropped", self, "_files_dropped")
+	get_tree().connect("files_dropped", self, "_files_dropped")
 #	for i in range(64):
 #		scale.append(i)
 #		notes.append(60 + i % 12)

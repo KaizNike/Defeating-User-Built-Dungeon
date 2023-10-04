@@ -1,9 +1,16 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://Font.tres" type="DynamicFont" id=2]
 [ext_resource path="res://Save_Script.gd" type="Script" id=3]
 [ext_resource path="res://CellularMusicChatGPT/CellMusicChatGPT3.tscn" type="PackedScene" id=4]
+
+[sub_resource type="Theme" id=1]
+default_font = ExtResource( 2 )
+Label/colors/font_color_shadow = Color( 0, 0, 0, 1 )
+Label/constants/line_spacing = 3
+Label/constants/shadow_offset_x = 4
+Label/constants/shadow_offset_y = 4
 
 [node name="Main" type="Node"]
 script = ExtResource( 1 )
@@ -65,5 +72,13 @@ __meta__ = {
 }
 
 [node name="CellMusicChatGPT3" parent="." instance=ExtResource( 4 )]
+
+[node name="Label" type="Label" parent="."]
+margin_left = -241.203
+margin_top = 51.1265
+margin_right = -36.2033
+margin_bottom = 130.126
+theme = SubResource( 1 )
+text = "Hello"
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
