@@ -21,6 +21,8 @@ var openFile = File.new()
 var Stream = AudioStreamOGGVorbis.new()
 var reading = false
 
+export (PackedScene) var musicLineScene
+
 func _ready():
 #	randomize()
 	get_tree().connect("files_dropped", self, "_files_dropped")
@@ -69,19 +71,28 @@ func _files_dropped(files, screen):
 	var fileIndex = 0
 	var extensions = "ogg"
 	for file in files:
-		if fileIndex > 1:
-			print("Only one music for now.")
-			return
+#		if fileIndex > 1:
+#			print("Only one music for now.")
+#			return
 		if file.get_extension() != extensions:
 			continue
-		self.playing = false
+#		self.playing = false
 #		openFile = file
+		var newLine = musicLineScene.instance()
+		var lineAudio = newLine.get_node("LineItemMusic")
+		var lineTitle = newLine.get_node("MusicPlaying/Label")
+		lineTitle.text = file.get_file()
+		print(lineAudio)
 		openFile.open(file, File.READ)
 		Stream.set_data(openFile.get_buffer(openFile.get_len()))
-		self.stream = Stream
-		fileIndex += 1
-		reading = true
-	self.playing = true
+		lineAudio.stream = Stream
+		openFile.close()
+		$Control/VSplitContainer/VBoxContainer.add_child(newLine)
+		lineAudio.playing = true
+		print(lineAudio.playing)
+#		fileIndex += 1
+#		reading = true
+#	self.playing = true
 
 func update_alpha():
 	var dt = 1.0 / sample_rate

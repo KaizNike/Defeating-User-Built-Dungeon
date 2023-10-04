@@ -19,6 +19,7 @@ stream = SubResource( 1 )
 volume_db = -8.0
 pitch_scale = 0.8
 script = ExtResource( 1 )
+musicLineScene = ExtResource( 3 )
 
 [node name="Control" type="Control" parent="."]
 anchor_right = 1.0
@@ -32,23 +33,31 @@ anchor_bottom = 1.0
 margin_right = 1024.0
 margin_bottom = 40.0
 
+[node name="OnOffButton" type="CheckButton" parent="Control/VSplitContainer/HBoxContainer"]
+margin_right = 135.0
+margin_bottom = 40.0
+theme = SubResource( 3 )
+pressed = true
+text = "Music"
+
 [node name="CheckButton" type="CheckButton" parent="Control/VSplitContainer/HBoxContainer"]
-margin_right = 124.0
+margin_left = 139.0
+margin_right = 263.0
 margin_bottom = 40.0
 theme = SubResource( 3 )
 text = "Loop"
 
 [node name="CheckButton2" type="CheckButton" parent="Control/VSplitContainer/HBoxContainer"]
-margin_left = 128.0
-margin_right = 285.0
+margin_left = 267.0
+margin_right = 424.0
 margin_bottom = 40.0
 theme = SubResource( 3 )
 text = "Shuffle"
 
 [node name="CheckButton3" type="Label" parent="Control/VSplitContainer/HBoxContainer"]
-margin_left = 289.0
+margin_left = 428.0
 margin_top = 9.0
-margin_right = 432.0
+margin_right = 571.0
 margin_bottom = 30.0
 theme = SubResource( 3 )
 text = "Curr Playing:"
