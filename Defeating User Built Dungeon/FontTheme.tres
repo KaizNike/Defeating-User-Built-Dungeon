@@ -8,6 +8,7 @@ font_data = ExtResource( 2 )
 
 [resource]
 default_font = ExtResource( 1 )
+CheckBox/fonts/font = ExtResource( 1 )
 Label/colors/font_color_shadow = Color( 0, 0, 0, 1 )
 Label/constants/line_spacing = 3
 Label/constants/shadow_offset_x = 4

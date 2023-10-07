@@ -21,6 +21,8 @@ var openFile = File.new()
 var Stream = AudioStreamOGGVorbis.new()
 var reading = false
 
+var currentSongs := []
+
 export (PackedScene) var musicLineScene
 
 func _ready():
@@ -81,12 +83,17 @@ func _files_dropped(files, screen):
 		var newLine = musicLineScene.instance()
 		var lineAudio = newLine.get_node("LineItemMusic")
 		var lineTitle = newLine.get_node("MusicPlaying/Label")
-		lineTitle.text = file.get_file()
+		var endTime = newLine.get_node("MusicPlaying/LineEdit")
+		lineTitle.text = file.get_file().get_slice(".ogg",0)
+#		Will need changes
+		currentSongs.append(file.get_file().get_slice(".ogg",0))
+		$Control/VSplitContainer/HBoxContainer/CurrentSongLabel.text = currentSongs[currentSongs.size()-1]
 		print(lineAudio)
 		openFile.open(file, File.READ)
 		Stream.set_data(openFile.get_buffer(openFile.get_len()))
 		lineAudio.stream = Stream
 		openFile.close()
+		endTime.text = str(lineAudio.stream.get_length()).pad_decimals(2)
 		$Control/VSplitContainer/VBoxContainer.add_child(newLine)
 		lineAudio.playing = true
 		print(lineAudio.playing)
