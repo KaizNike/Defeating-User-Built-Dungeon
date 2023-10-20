@@ -7,7 +7,7 @@ var version = [0, 18, 0, "-alpha"]
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
-onready var levelLabel = $VSplitContainer/LevelLabel
+onready var levelLabel = $VSplitContainer/VSplitContainer/LevelLabel
 onready var statusLabel = $VSplitContainer/StatusLabel
 onready var notiTimer = $NotificationTimer
 onready var textEdit = $TextEdit
@@ -179,7 +179,8 @@ func _actors_init(array):
 				_being_init(Vector2(x,y),array[y][x])
 	if actors.size() > 1:
 		actors.sort_custom(SortingActors, "sort_descending")
-		$CellMusicChatGPT3.init_automatons(actors,Vector2(game_array[0].size(), game_array.size()))
+		Globals.emit_signal("init_automatons_for_data_sound", actors, Vector2(game_array[0].size(), game_array.size()))
+#		$CellMusicChatGPT3.init_automatons(actors,Vector2(game_array[0].size(), game_array.size()))
 	print(actors)
 	
 # TODO
@@ -286,7 +287,7 @@ func _input(event):
 				textEdit.text = ""
 			return
 		else:
-			$VSplitContainer/LevelLabel.grab_focus()
+			levelLabel.grab_focus()
 			OS.tts_speak("No longer editing.", voice[0], 50, 1.0, 1.0, 0, true)
 	if event.is_action_released("ui_move") and textEdit.visible:
 		var loc = Vector2(textEdit.cursor_get_line(),textEdit.cursor_get_column())
@@ -1118,12 +1119,12 @@ func _handle_player_interaction(type, loc, array):
 	if type == ">":
 		levelChange = true
 		levelDiff = 1
-		Rooms[currentRoom] = $VSplitContainer/LevelLabel.text
+		Rooms[currentRoom] = levelLabel.text
 		currentRoom += 1
 	elif type == "<":
 		levelChange = true
 		levelDiff = -1
-		Rooms[currentRoom] = $VSplitContainer/LevelLabel.text
+		Rooms[currentRoom] = levelLabel.text
 		currentRoom -= 1
 	elif type == "Y":
 		var I = item.duplicate(false)

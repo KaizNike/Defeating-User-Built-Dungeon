@@ -17,30 +17,26 @@ var notes = []
 var buffer = PoolVector2Array()
 var input_history = []
 var output_history = []
-var openFile = File.new()
 var Stream = AudioStreamOGGVorbis.new()
 var reading = false
 
-var currentSongs := []
-
-export (PackedScene) var musicLineScene
-
 func _ready():
-#	randomize()
-	get_tree().connect("files_dropped", self, "_files_dropped")
-#	for i in range(64):
-#		scale.append(i)
-#		notes.append(60 + i % 12)
-#	stream.mix_rate = sample_rate
-#	for i in range(buffer_size):
-#		buffer.append(Vector2.ZERO)
-#	# Start playing audio stream
-#	playback = get_stream_playback()
-#	set_bus("Master")
-##	yield("init_automatons", "completed")
-#	play()
+	randomize()
+#	get_tree().connect("files_dropped", self, "_files_dropped")
+	Globals.connect("init_automatons_for_data_sound", self, "init_automatons")
+	for i in range(64):
+		scale.append(i)
+		notes.append(60 + i % 12)
+	stream.mix_rate = sample_rate
+	for i in range(buffer_size):
+		buffer.append(Vector2.ZERO)
+	# Start playing audio stream
+	playback = get_stream_playback()
+	set_bus("Master")
+#	yield("init_automatons", "completed")
+	play()
 	pass
-
+	
 func init_automatons(actorsArray : Array, cells : Vector2) -> bool:
 	automaton.clear()
 	clear_buffer()
@@ -55,11 +51,11 @@ func init_automatons(actorsArray : Array, cells : Vector2) -> bool:
 	return true
 
 func _process(delta):
-	if reading:
+	if not reading:
 #		var Buffer = openFile.get_buffer(buffer_size)
 		pass
 	else:
-#		_fill_buffer()
+		_fill_buffer()
 		pass
 
 
@@ -69,37 +65,6 @@ var alpha = 0.0
 func _init():
 	update_alpha()
 
-func _files_dropped(files, screen):
-	var fileIndex = 0
-	var extensions = "ogg"
-	for file in files:
-#		if fileIndex > 1:
-#			print("Only one music for now.")
-#			return
-		if file.get_extension() != extensions:
-			continue
-#		self.playing = false
-#		openFile = file
-		var newLine = musicLineScene.instance()
-		var lineAudio = newLine.get_node("LineItemMusic")
-		var lineTitle = newLine.get_node("MusicPlaying/Label")
-		var endTime = newLine.get_node("MusicPlaying/LineEdit")
-		lineTitle.text = file.get_file().get_slice(".ogg",0)
-#		Will need changes
-		currentSongs.append(file.get_file().get_slice(".ogg",0))
-		$Control/VSplitContainer/HBoxContainer/CurrentSongLabel.text = currentSongs[currentSongs.size()-1]
-		print(lineAudio)
-		openFile.open(file, File.READ)
-		Stream.set_data(openFile.get_buffer(openFile.get_len()))
-		lineAudio.stream = Stream
-		openFile.close()
-		endTime.text = str(lineAudio.stream.get_length()).pad_decimals(2)
-		$Control/VSplitContainer/VBoxContainer.add_child(newLine)
-		lineAudio.playing = true
-		print(lineAudio.playing)
-#		fileIndex += 1
-#		reading = true
-#	self.playing = true
 
 func update_alpha():
 	var dt = 1.0 / sample_rate
@@ -163,3 +128,4 @@ func _fill_buffer():
 	while to_fill > 0:
 		playback.push_frame(buffer[to_fill%buffer_size])
 		to_fill -= 1
+

@@ -3,7 +3,7 @@
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://Font.tres" type="DynamicFont" id=2]
 [ext_resource path="res://Save_Script.gd" type="Script" id=3]
-[ext_resource path="res://CellularMusicChatGPT/CellMusicChatGPT3.tscn" type="PackedScene" id=4]
+[ext_resource path="res://CellularMusicChatGPT/AudioPlayer.tscn" type="PackedScene" id=4]
 [ext_resource path="res://FontTheme.tres" type="Theme" id=5]
 
 [node name="Main" type="Node"]
@@ -15,10 +15,26 @@ margin_right = 1024.0
 margin_bottom = 600.0
 dragger_visibility = 2
 
-[node name="LevelLabel" type="Label" parent="VSplitContainer"]
+[node name="VSplitContainer" type="VSplitContainer" parent="VSplitContainer"]
 margin_right = 1024.0
-margin_bottom = 521.0
+margin_bottom = 579.0
 size_flags_vertical = 3
+
+[node name="CellMusicChatGPT3" parent="VSplitContainer/VSplitContainer" instance=ExtResource( 4 )]
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_right = 1024.0
+margin_bottom = 426.0
+size_flags_vertical = 3
+
+[node name="ScrollContainer" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer" index="1"]
+margin_bottom = 426.0
+
+[node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer"]
+margin_top = 438.0
+margin_right = 1024.0
+margin_bottom = 579.0
+size_flags_vertical = 1
 custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
 custom_constants/shadow_offset_x = 4
 custom_constants/shadow_offset_y = 4
@@ -30,12 +46,12 @@ XXDXXXXXXXXX
 X..........X
 ########################"
 autowrap = true
-clip_text = true
 
 [node name="StatusLabel" type="Label" parent="VSplitContainer"]
-margin_top = 521.0
+margin_top = 579.0
 margin_right = 1024.0
 margin_bottom = 600.0
+size_flags_vertical = 0
 custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
 custom_constants/shadow_offset_x = 4
 custom_constants/shadow_offset_y = 4
@@ -65,8 +81,6 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="CellMusicChatGPT3" parent="." instance=ExtResource( 4 )]
-
 [node name="Label" type="Label" parent="."]
 margin_left = -241.203
 margin_top = 51.1265
@@ -76,3 +90,6 @@ theme = ExtResource( 5 )
 text = "Hello"
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
+
+[editable path="VSplitContainer/VSplitContainer/CellMusicChatGPT3"]
+[editable path="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/ScrollContainer/VBoxContainer/PanelContainer"]

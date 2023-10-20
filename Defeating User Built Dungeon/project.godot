@@ -18,6 +18,10 @@ config/icon="res://as/@icon2small.png"
 
 general/text_to_speech=true
 
+[autoload]
+
+Globals="*res://Globals.tscn"
+
 [display]
 
 window/size/resizable=false
