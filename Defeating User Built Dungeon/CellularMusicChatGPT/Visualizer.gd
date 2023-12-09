@@ -19,7 +19,7 @@ func _ready():
 
 
 func _process(_delta):
-	update()
+	pass
 
 
 func _draw():
@@ -29,7 +29,7 @@ func _draw():
 	for i in range(1, VU_COUNT+1):
 		var hz = i * FREQ_MAX / VU_COUNT;
 		var magnitude: float = spectrum.get_magnitude_for_frequency_range(prev_hz, hz).length()
-		var energy = clamp((MIN_DB + linear2db(magnitude)) / MIN_DB, 0, 1)
+		var energy = clamp((MIN_DB + linear_to_db(magnitude)) / MIN_DB, 0, 1)
 		var height = energy * HEIGHT
-		draw_rect(Rect2(w * i, HEIGHT - height, w, height), Color.white)
+		draw_rect(Rect2(w * i, HEIGHT - height, w, height), Color.WHITE)
 		prev_hz = hz

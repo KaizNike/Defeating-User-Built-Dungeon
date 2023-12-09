@@ -14,16 +14,16 @@ var cutoff_freq = 12000.0
 var automaton = []
 var scale = []
 var notes = []
-var buffer = PoolVector2Array()
+var buffer = PackedVector2Array()
 var input_history = []
 var output_history = []
-var Stream = AudioStreamOGGVorbis.new()
+var Stream = AudioStreamOggVorbis.new()
 var reading = false
 
 func _ready():
 	randomize()
 #	get_tree().connect("files_dropped", self, "_files_dropped")
-	Globals.connect("init_automatons_for_data_sound", self, "init_automatons")
+	Globals.connect("init_automatons_for_data_sound", Callable(self, "init_automatons"))
 	for i in range(64):
 		scale.append(i)
 		notes.append(60 + i % 12)

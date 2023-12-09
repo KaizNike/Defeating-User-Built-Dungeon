@@ -1,6 +1,6 @@
 extends Resource
 
-export(Dictionary) var Player
-export(int) var CurrentRoom
-export(Array) var Rooms
-export(Dictionary) var Scoring
+@export var Player: Dictionary
+@export var CurrentRoom: int
+@export var Rooms: Array
+@export var Scoring: Dictionary

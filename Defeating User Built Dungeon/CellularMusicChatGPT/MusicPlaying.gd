@@ -1,7 +1,7 @@
 extends PanelContainer
 
 var timeSinceStart := 0.0
-export var musicNum = 1
+@export var musicNum = 1
 
 #func _process(delta):
 #	if $LineItemMusic.playing:

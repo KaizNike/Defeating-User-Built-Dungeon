@@ -2,15 +2,17 @@ extends Control
 
 var currentSongs := []
 
-var Stream = AudioStreamOGGVorbis.new()
-var videoStreamW = VideoStreamWebm.new()
+var Stream = AudioStreamOggVorbis.new()
+var MP3Stream = AudioStreamMP3.new()
+#var videoStreamW = VideoStreamWebm.new()
 var videoStreamT = VideoStreamTheora.new()
-var openFile = File.new()
-export (PackedScene) var musicLineScene
+var openFile = FileAccess
+@export var musicLineScene := PackedScene.new()
 
 func _ready():
 #	randomize()
-	get_tree().connect("files_dropped", self, "_files_dropped")
+	#get_tree().connect("files_dropped", Callable(self, "_files_dropped"))
+	get_viewport().files_dropped.connect(_files_dropped)
 #	for i in range(64):
 #		scale.append(i)
 #		notes.append(60 + i % 12)
@@ -24,9 +26,9 @@ func _ready():
 #	play()
 	pass
 
-func _files_dropped(files, screen):
+func _files_dropped(files):
 	var fileIndex = 0
-	var extensions = ["ogg", "ogv", "webm"]
+	var extensions = ["ogg", "ogv", "mp3"]
 	for file in files:
 #		if fileIndex > 1:
 #			print("Only one music for now.")
@@ -36,20 +38,20 @@ func _files_dropped(files, screen):
 		else:
 			continue
 		match file.get_extension():
-			"webm":
-				videoStreamW.set_file(file)
-				$VSplitContainer/HBoxContainer/VideoScreen/VideoPlayer.stream = videoStreamW
-				$VSplitContainer/HBoxContainer/VideoScreen/VideoPlayer.play()
-				print("I do not work well!")
-#				print("thanks!")
+			#"webm":
+				#videoStreamW.set_file(file)
+				#$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.stream = videoStreamW
+				#$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.play()
+				#print("I do not work well!")
+##				print("thanks!")
 			"ogv":
 				videoStreamT.set_file(file)
-				$VSplitContainer/HBoxContainer/VideoScreen/VideoPlayer.stream = videoStreamT
-				$VSplitContainer/HBoxContainer/VideoScreen/VideoPlayer.play()
+				$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.stream = videoStreamT
+				$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.play()
 #				print("I do not work well!")
 #				print("thanks!")
 			"ogg":
-				var newLine = musicLineScene.instance()
+				var newLine = musicLineScene.instantiate()
 				var lineAudio = newLine.get_node("LineItemMusic")
 				var lineTitle = newLine.get_node("MusicPlaying/Label")
 				var endTime = newLine.get_node("MusicPlaying/LineEdit")
@@ -59,11 +61,31 @@ func _files_dropped(files, screen):
 				currentSongs.append(file.get_file().get_slice(".ogg",0))
 				$VSplitContainer/HBoxContainer/CurrentSongLabel.text = currentSongs[currentSongs.size()-1]
 				print(lineAudio)
-				openFile.open(file, File.READ)
-				Stream.set_data(openFile.get_buffer(openFile.get_len()))
-				lineAudio.stream = Stream
-				openFile.close()
+				#var openFile = FileAccess.open(file, FileAccess.READ)
+				var stream = AudioStreamOggVorbis.load_from_file(file)
+				lineAudio.stream = stream
+				#openFile.close()
 				endTime.text = str(lineAudio.stream.get_length()).pad_decimals(2)
 				$VSplitContainer/ScrollContainer/VBoxContainer.add_child(newLine)
-				lineAudio.playing = true
+				lineAudio.play()
+				print(lineAudio.playing)
+			"mp3":
+				var newLine = musicLineScene.instantiate()
+				var lineAudio = newLine.get_node("LineItemMusic")
+				var lineTitle = newLine.get_node("MusicPlaying/Label")
+				var endTime = newLine.get_node("MusicPlaying/LineEdit")
+				newLine.musicNum = currentSongs.size() + 1
+				lineTitle.text = file.get_file().get_slice(".mp3",0)
+		#		Will need changes
+				currentSongs.append(file.get_file().get_slice(".mp3",0))
+				$VSplitContainer/HBoxContainer/CurrentSongLabel.text = currentSongs[currentSongs.size()-1]
+				print(lineAudio)
+				var openFile = FileAccess.open(file, FileAccess.READ)
+				var stream = AudioStreamMP3.new()
+				stream.data = openFile.get_buffer(openFile.get_length())
+				lineAudio.stream = stream
+				#openFile.close()
+				endTime.text = str(lineAudio.stream.get_length()).pad_decimals(2)
+				$VSplitContainer/ScrollContainer/VBoxContainer.add_child(newLine)
+				lineAudio.play()
 				print(lineAudio.playing)
