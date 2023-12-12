@@ -9,10 +9,13 @@ var videoStreamT = VideoStreamTheora.new()
 var openFile = FileAccess
 @export var musicLineScene := PackedScene.new()
 
+var videoInside = false
+
 func _ready():
 #	randomize()
 	#get_tree().connect("files_dropped", Callable(self, "_files_dropped"))
 	get_viewport().files_dropped.connect(_files_dropped)
+	#$VideoPopup.popup()
 #	for i in range(64):
 #		scale.append(i)
 #		notes.append(60 + i % 12)
@@ -89,3 +92,34 @@ func _files_dropped(files):
 				$VSplitContainer/ScrollContainer/VBoxContainer.add_child(newLine)
 				lineAudio.play()
 				print(lineAudio.playing)
+
+
+func _on_video_popup_popup_hide():
+	$VideoPopup/VideoContainer.get_child(0).reparent($VSplitContainer/HBoxContainer/VideoScreen)
+	videoInside = false
+	pass # Replace with function body.
+
+
+func _on_video_stream_player_mouse_entered():
+	if not videoInside:
+		if $VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.is_playing():
+				$VSplitContainer/HBoxContainer/VideoScreen/Label.visible = true
+	pass # Replace with function body.
+
+
+func _on_video_stream_player_mouse_exited():
+	$VSplitContainer/HBoxContainer/VideoScreen/Label.visible = false
+	pass # Replace with function body.
+
+
+func _on_video_stream_player_gui_input(event):
+	if event.is_action_pressed("lmb"):
+		$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.reparent($VideoPopup/VideoContainer)
+		#$VideoPopup.get_child(0).owner = get_tree().current_scene
+		#$VideoPopup.get_child(0).stop()
+		#$VideoPopup.get_child(0).play()
+		#$VideoPopup.get_child(0).expand = true
+		$VideoPopup.popup()
+		videoInside = true
+		pass
+	pass # Replace with function body.
