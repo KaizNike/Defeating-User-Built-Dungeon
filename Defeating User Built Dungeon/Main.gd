@@ -390,23 +390,23 @@ func _input(event):
 				DisplayServer.tts_speak("Firing canceled.", voice[0])
 			notiTimer.start()
 		print("FIRE")
-		if Input.is_key_pressed(16777359):
+		if Input.is_action_pressed("fire_upleft"):
 			_fireBow(player, 9)		
 		if event.is_action_pressed("fire_up"):
 			_fireBow(player, 8)		
-		if Input.is_key_pressed(16777357):
+		if Input.is_action_pressed("fire_upright"):
 			_fireBow(player, 7)		
 		if event.is_action_pressed("fire_right"):
 			_fireBow(player, 6)		
-		if Input.is_key_pressed(16777355):
+		if Input.is_action_pressed("wait"):
 			_fireBow(player, 5)		
 		if event.is_action_pressed("fire_left"):
 			_fireBow(player, 4)		
-		if Input.is_key_pressed(16777353):
+		if Input.is_action_pressed("fire_downright"):
 			_fireBow(player, 3)		
 		if event.is_action_pressed("fire_down"):
 			_fireBow(player, 2)		
-		if Input.is_key_pressed(16777351):
+		if Input.is_action_pressed("fire_downleft"):
 			_fireBow(player, 1)
 		return
 	elif event.is_action_pressed("paste") and DisplayServer.clipboard_get():

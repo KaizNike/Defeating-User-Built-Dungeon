@@ -82,3 +82,6 @@ theme = ExtResource("5")
 text = "Hello"
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
+
+[editable path="VSplitContainer/VSplitContainer/CellMusicChatGPT3"]
+[editable path="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/ScrollContainer/VBoxContainer/PanelContainer"]
