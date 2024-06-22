@@ -1,7 +1,7 @@
 # Defeating User Built Dungeon
  Godot text-based roguelike where you supply the levels.
  [Play on itch](https://kaizarnike.itch.io/defeating-user-built-dungeon)
- Uses Godot v3.6.beta1 (awaiting full release)
+ Uses Godot v4.2.2 (awaiting full release)
 
 ![Banner Fifth Version, A Dungeon with many rats](.//v0.7-alpha-screen4.png)
 

@@ -26,10 +26,6 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VSplitContainer" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3" index="0"]
-anchor_right = 0.0
-anchor_bottom = 0.0
-
 [node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer"]
 layout_mode = 2
 size_flags_vertical = 1
@@ -42,7 +38,11 @@ X..........X
 X..........X
 XXDXXXXXXXXX
 X..........X
-########################"
+########################
+##
+#
+#
+#"
 
 [node name="StatusLabel" type="Label" parent="VSplitContainer"]
 layout_mode = 2
@@ -82,6 +82,3 @@ theme = ExtResource("5")
 text = "Hello"
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
-
-[editable path="VSplitContainer/VSplitContainer/CellMusicChatGPT3"]
-[editable path="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/ScrollContainer/VBoxContainer/PanelContainer"]

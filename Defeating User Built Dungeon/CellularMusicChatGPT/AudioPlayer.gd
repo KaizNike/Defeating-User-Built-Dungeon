@@ -51,6 +51,7 @@ func _files_dropped(files):
 				videoStreamT.set_file(file)
 				$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.stream = videoStreamT
 				$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.play()
+				print($VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.is_playing())
 #				print("I do not work well!")
 #				print("thanks!")
 			"ogg":

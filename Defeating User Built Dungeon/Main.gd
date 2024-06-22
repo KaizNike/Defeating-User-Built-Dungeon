@@ -123,7 +123,9 @@ var body = {"Loc": Vector2.ZERO, "Inv": [], "Desc": ""}
 
 func _ready():
 	randomize()
-	get_tree().connect("files_dropped", Callable(self, "_files_dropped"))
+	var check1 = get_tree().connect("files_dropped", Callable(self, "_files_dropped"))
+	if check1 != 0:
+		print("Error with file loading!", check1)
 	playerOrig = player.duplicate(true)
 #	First start without autosave
 	if not load_game(autosaveLoc):
@@ -638,9 +640,9 @@ func verify_save(save):
 
 func save_game(loc):
 	var new_save = game_save_class.new()
-	new_save.Player = player
+	new_save.Player = player.duplicate(true)
 	new_save.CurrentRoom = currentRoom
-	new_save.Rooms = Rooms
+	new_save.Rooms = Rooms.duplicate(true)
 	new_save.Scoring = scoring.duplicate(true)
 	print(new_save.Scoring)
 	var error = ResourceSaver.save(new_save, loc)
@@ -650,7 +652,7 @@ func save_game(loc):
 
 
 func load_game(loc) -> bool:
-	var dir = DirAccess.open(loc)
+	var dir = FileAccess.file_exists(loc)
 	if not dir:
 		print("save not found!")
 		return false
@@ -660,9 +662,9 @@ func load_game(loc) -> bool:
 		print("verify failed!")
 		return false
 		
-	player = loaded_save.Player
+	player = loaded_save.Player.duplicate(true)
 	currentRoom = loaded_save.CurrentRoom
-	Rooms = loaded_save.Rooms
+	Rooms = loaded_save.Rooms.duplicate(true)
 	scoring = loaded_save.Scoring.duplicate(true)
 	
 	return true
@@ -1412,7 +1414,7 @@ func _find_and_use_weapon(Actor, Behav):
 func _find_and_use_item(Item, Actor):
 	var spotIndex = 0
 	for spot in Actor.Inv:
-		if typeof(spot) == 18:
+		if typeof(spot) == TYPE_DICTIONARY:
 			if "Char" in spot and "Uses" in spot:
 				if spot.Char == Item:
 #					print("OK!")
@@ -1434,7 +1436,7 @@ func _find_and_use_item(Item, Actor):
 func _find_item(Item, Actor) -> bool:
 	var spotIndex = 0
 	for spot in Actor.Inv:
-		if typeof(spot) == 18:
+		if typeof(spot) == TYPE_DICTIONARY:
 			if "Char" in spot and "Uses" in spot:
 				if spot.Char == Item:
 					return true
