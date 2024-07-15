@@ -27,6 +27,10 @@ Globals="*res://Globals.tscn"
 
 window/size/resizable=false
 
+[filesystem]
+
+import/blender/enabled=false
+
 [input]
 
 move_up={

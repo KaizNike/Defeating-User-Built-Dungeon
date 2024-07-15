@@ -16,3 +16,9 @@ func _physics_process(delta):
 
 func _on_Button_pressed():
 	pass # Replace with function body.
+
+
+func _on_h_slider_drag_ended(value_changed):
+	if value_changed:
+		$LineItemMusic.volume_db = $MusicPlaying/HSlider.value
+	pass # Replace with function body.

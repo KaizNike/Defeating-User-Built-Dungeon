@@ -9,6 +9,8 @@ func _ready():
 	self.play()
 	playback = self.get_stream_playback()
 	fill_buffer()
+	if not reading:
+		stop()
 	
 
 func _process(delta):

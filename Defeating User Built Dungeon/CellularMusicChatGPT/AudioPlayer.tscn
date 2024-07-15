@@ -39,7 +39,7 @@ grow_vertical = 2
 script = ExtResource("5")
 musicLineScene = ExtResource("3")
 
-[node name="VSplitContainer" type="VSplitContainer" parent="."]
+[node name="VSplitContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -47,27 +47,31 @@ anchor_bottom = 1.0
 [node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer"]
 layout_mode = 2
 
-[node name="OnOffButton" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
+[node name="MusicB" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
 layout_mode = 2
 theme = SubResource("3")
+button_pressed = true
 text = "Music"
 
-[node name="OnOffButton2" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
+[node name="VoiceB" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
 layout_mode = 2
 theme = SubResource("3")
+button_pressed = true
 text = "Voice"
 
-[node name="OnOffButton3" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
+[node name="SFXB" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
+visible = false
 layout_mode = 2
 theme = SubResource("3")
 text = "SFX"
 
-[node name="CheckButton" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
+[node name="LoopB" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
 layout_mode = 2
 theme = SubResource("3")
+button_pressed = true
 text = "Loop"
 
-[node name="CheckButton2" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
+[node name="ShuffleB" type="CheckButton" parent="VSplitContainer/HBoxContainer"]
 layout_mode = 2
 theme = SubResource("3")
 text = "Shuffle"
@@ -105,6 +109,65 @@ custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 script = ExtResource("4")
 
+[node name="HBoxContainer2" type="HBoxContainer" parent="VSplitContainer"]
+layout_mode = 2
+theme = ExtResource("6")
+
+[node name="PanelContainer" type="PanelContainer" parent="VSplitContainer/HBoxContainer2"]
+layout_mode = 2
+
+[node name="HSplitContainer" type="HSplitContainer" parent="VSplitContainer/HBoxContainer2/PanelContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VSplitContainer/HBoxContainer2/PanelContainer/HSplitContainer"]
+layout_mode = 2
+text = "Music"
+
+[node name="HSlider" type="HSlider" parent="VSplitContainer/HBoxContainer2/PanelContainer/HSplitContainer"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_vertical = 4
+value = 75.0
+tick_count = 5
+ticks_on_borders = true
+
+[node name="PanelContainer2" type="PanelContainer" parent="VSplitContainer/HBoxContainer2"]
+layout_mode = 2
+
+[node name="HSplitContainer2" type="HSplitContainer" parent="VSplitContainer/HBoxContainer2/PanelContainer2"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VSplitContainer/HBoxContainer2/PanelContainer2/HSplitContainer2"]
+layout_mode = 2
+text = "Voice"
+
+[node name="HSlider" type="HSlider" parent="VSplitContainer/HBoxContainer2/PanelContainer2/HSplitContainer2"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_vertical = 4
+value = 50.0
+tick_count = 5
+ticks_on_borders = true
+
+[node name="PanelContainer3" type="PanelContainer" parent="VSplitContainer/HBoxContainer2"]
+layout_mode = 2
+
+[node name="HSplitContainer3" type="HSplitContainer" parent="VSplitContainer/HBoxContainer2/PanelContainer3"]
+visible = false
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VSplitContainer/HBoxContainer2/PanelContainer3/HSplitContainer3"]
+layout_mode = 2
+text = "SFX"
+
+[node name="HSlider" type="HSlider" parent="VSplitContainer/HBoxContainer2/PanelContainer3/HSplitContainer3"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_vertical = 4
+value = 75.0
+tick_count = 5
+ticks_on_borders = true
+
 [node name="ScrollContainer" type="ScrollContainer" parent="VSplitContainer"]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
@@ -113,7 +176,7 @@ follow_focus = true
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VSplitContainer/ScrollContainer"]
 layout_mode = 2
-size_flags_horizontal = 9
+size_flags_horizontal = 3
 
 [node name="PanelContainer" parent="VSplitContainer/ScrollContainer/VBoxContainer" instance=ExtResource("3")]
 visible = false

@@ -26,6 +26,9 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="Visualizer" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="8"]
+custom_minimum_size = Vector2(100, 40)
+
 [node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer"]
 layout_mode = 2
 size_flags_vertical = 1

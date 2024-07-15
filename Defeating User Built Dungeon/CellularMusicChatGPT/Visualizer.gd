@@ -16,9 +16,11 @@ var spectrum
 
 func _ready():
 	spectrum = AudioServer.get_bus_effect_instance(0,0)
+	set_process(true)
 
 
 func _process(_delta):
+	queue_redraw()
 	pass
 
 

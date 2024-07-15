@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 19, 0, "-alpha"]
-# Godot 4 Version, MP3 Support
+var version = [0, 20, 0, "-alpha"]
+# Filehandling + Music Fixes
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -123,7 +123,8 @@ var body = {"Loc": Vector2.ZERO, "Inv": [], "Desc": ""}
 
 func _ready():
 	randomize()
-	var check1 = get_tree().connect("files_dropped", Callable(self, "_files_dropped"))
+	#var check1 = get_tree().connect("files_dropped", Callable(self, "_files_dropped"))
+	var check1 = get_viewport().files_dropped.connect(_files_dropped)
 	if check1 != 0:
 		print("Error with file loading!", check1)
 	playerOrig = player.duplicate(true)
@@ -1487,7 +1488,7 @@ func _spawn_item_inside_container(containerInv : Array, containerType):
 		return
 	containerInv.append(Item)
 
-func _files_dropped(files, screen):
+func _files_dropped(files):
 	var fileIndex = 0
 	var extensions = "txt"
 	if currentRoom < 0:
@@ -1502,8 +1503,7 @@ func _files_dropped(files, screen):
 			continue
 #			Bool = true
 #		print(file, " ", screen, Bool)
-		var f = FileAccess.open(File, File.READ)
-		var data = ""
+		var f = FileAccess.open(File,FileAccess.READ)
 		var index = 1
 		levelLabel.text = ""
 		var textLength = 0
@@ -1533,9 +1533,9 @@ func _files_dropped(files, screen):
 		f.close()
 		if ifFailed:
 			continue
-		f = File.new()
+		var data = ""
 		index = 1
-		f.open(File,File.READ)
+		f = FileAccess.open(File,FileAccess.READ)
 		while not f.eof_reached():
 			if index > 6:
 				break
