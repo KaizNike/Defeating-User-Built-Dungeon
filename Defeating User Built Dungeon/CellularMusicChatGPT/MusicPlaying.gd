@@ -3,6 +3,8 @@ extends PanelContainer
 var timeSinceStart := 0.0
 @export var musicNum = 1
 
+
+
 #func _process(delta):
 #	if $LineItemMusic.playing:
 #		timeSinceStart += delta
@@ -21,4 +23,8 @@ func _on_Button_pressed():
 func _on_h_slider_drag_ended(value_changed):
 	if value_changed:
 		$LineItemMusic.volume_db = $MusicPlaying/HSlider.value
+	pass # Replace with function body.
+
+
+func _on_selected_cb_toggled(toggled_on):
 	pass # Replace with function body.

@@ -14,8 +14,9 @@ script = ExtResource("1")
 [node name="MusicPlaying" type="HBoxContainer" parent="."]
 layout_mode = 2
 
-[node name="CheckBox" type="CheckBox" parent="MusicPlaying"]
+[node name="SelectedCB" type="CheckBox" parent="MusicPlaying"]
 layout_mode = 2
+button_pressed = true
 
 [node name="Button" type="Button" parent="MusicPlaying"]
 layout_mode = 2
@@ -53,5 +54,6 @@ text = "300.0"
 
 [node name="LineItemMusic" type="AudioStreamPlayer" parent="."]
 
+[connection signal="toggled" from="MusicPlaying/SelectedCB" to="." method="_on_selected_cb_toggled"]
 [connection signal="pressed" from="MusicPlaying/Button" to="." method="_on_Button_pressed"]
 [connection signal="drag_ended" from="MusicPlaying/HSlider" to="." method="_on_h_slider_drag_ended"]

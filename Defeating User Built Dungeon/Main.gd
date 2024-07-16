@@ -1718,11 +1718,11 @@ func _clean_pasted_text(text:String) -> String:
 func _fireBow(Actor, Dir):
 	match Dir:
 		9:
-			Dir = Vector2(1,-1)
+			Dir = Vector2(-1,-1)
 		8:
 			Dir = Vector2(0,-1)
 		7:
-			Dir = Vector2(-1,-1)
+			Dir = Vector2(1,-1)
 		6:
 			Dir = Vector2(1,0)
 		5:
