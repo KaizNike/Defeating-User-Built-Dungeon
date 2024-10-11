@@ -26,8 +26,26 @@ size_flags_vertical = 3
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="MusicB" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="0"]
+visible = false
+
+[node name="VoiceB" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="1"]
+visible = false
+
+[node name="LoopB" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="3"]
+visible = false
+
+[node name="ShuffleB" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="4"]
+visible = false
+
+[node name="CurrentSongLabel" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="6"]
+text = "None drag and drop a OGV,OGG,MP3"
+
 [node name="Visualizer" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="8"]
 custom_minimum_size = Vector2(100, 40)
+
+[node name="HBoxContainer2" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer" index="1"]
+visible = false
 
 [node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer"]
 layout_mode = 2
@@ -36,6 +54,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 4
 theme_override_fonts/font = ExtResource("2")
+theme_override_font_sizes/font_size = 32
 text = "XXXXXXXXXXXX
 X..........X
 X..........X
@@ -46,6 +65,7 @@ X..........X
 #
 #
 #"
+autowrap_mode = 3
 
 [node name="StatusLabel" type="Label" parent="VSplitContainer"]
 layout_mode = 2
@@ -54,6 +74,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 4
 theme_override_fonts/font = ExtResource("2")
+theme_override_font_sizes/font_size = 32
 text = "1 . . . . . . . . X"
 clip_text = true
 
@@ -68,6 +89,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 tooltip_text = "Exit with ~ or Ctrl + L then Press F2 or \" for Tiles"
 theme_override_fonts/font = ExtResource("2")
+theme_override_font_sizes/font_size = 32
 text = "######################
 #@            <#>    #
 #Dx#############n  r #

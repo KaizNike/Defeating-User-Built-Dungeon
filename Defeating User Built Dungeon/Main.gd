@@ -2,8 +2,9 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 20, 0, "-alpha"]
+var version = [0, 21, 1, "-alpha"]
 # Filehandling + Music Fixes
+## Patch - Fixes + Version Change to 4.3
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -11,6 +12,7 @@ var version = [0, 20, 0, "-alpha"]
 @onready var statusLabel = $VSplitContainer/StatusLabel
 @onready var notiTimer = $NotificationTimer
 @onready var textEdit = $TextEdit
+@onready var currentSong = $VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer/CurrentSongLabel
 
 # tts
 var voice = DisplayServer.tts_get_voices_for_language("en")
@@ -69,7 +71,7 @@ const COLLIDES = ["#", "D", "X", "*"]
 # "r" - Rat*, "n" - DiNgo*, "k" - Kobold, "g" - Goblin, "L" - Lich, "@" - Player*, "x" - Crate*, "c": Chest
 const ENTITIES = ["r", "n", "k", "g", "L", "@", "x", "c"]
 
-const ALL = {"#": "Wall"," ": "Floor", ".": "You walked here",
+const ALL = {"#": "Wall"," ": "Floor", ".": "You walked here", "?": "Your vision",
 # Interacts
 ">": "Down Stair", "<": "Up Stair", "Y": "Door Key", "y": "Chest Key", "D": "a locked door", "K": "Skeleton3D Key", "%": "Body", "+": "Healing Potion", "c": "Chest",
 # Entities
@@ -142,7 +144,8 @@ func _ready():
 		save_game(autosaveLoc)
 		levelLabel.text = "You are hunting L on floor X,\n do not fail us! \nPress F1 or question mark for help!"
 		if not is_muted:
-			DisplayServer.tts_speak("You are hunting L on floor X,\n do not fail us! \nPress F1 or question mark for help!", voice[0])
+			DisplayServer.tts_stop()
+			DisplayServer.tts_speak("You are hunting L on floor X,\n do not fail us! \n" + "currently playing: " + currentSong.text + "\nPress F1 or question mark for help!", voice[0])
 		statusLabel.text = "Press Anything."
 		if not is_muted:
 			DisplayServer.tts_speak("Press Anything.", voice[0])
@@ -166,7 +169,7 @@ func _ready():
 		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!"
 		statusLabel.text = "Press Anything."
 		if not is_muted:
-			DisplayServer.tts_speak("You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!\nPress anything.", voice[0])
+			DisplayServer.tts_speak("You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!\n" + "currently playing: " + currentSong.text + "\nPress anything.", voice[0])
 		
 	
 class SortingActors:
@@ -233,6 +236,9 @@ func _input(event):
 			waiting = false
 			waitingOn = ""
 			return
+		if textEdit.visible:
+			flip_level_edit()
+			return
 		statusLabel.text = "Escape again to quit."
 		DisplayServer.tts_speak(statusLabel.text, voice[0])
 		if escaping:
@@ -275,23 +281,8 @@ func _input(event):
 		alreadyLooking = true
 		return
 	if event.is_action_pressed("enter_level_editor") and not waitingOn:
-		$VSplitContainer.visible = opposite
-		opposite = !opposite
-		frozenInputs = opposite
-		textEdit.visible = opposite
-#		Copy current level to editor
-		if textEdit.visible:
-			if not is_muted:
-				DisplayServer.tts_speak("Now level editing.", voice[0])
-			textEdit.grab_focus()
-			textEdit.text = ""
-			textEdit.text = levelLabel.text
-			if not game_array:
-				textEdit.text = ""
-			return
-		else:
-			levelLabel.grab_focus()
-			DisplayServer.tts_speak("No longer editing.", voice[0], 50, 1.0, 1.0, 0, true)
+		flip_level_edit()
+		return
 	if event.is_action_released("ui_move") and textEdit.visible:
 		var loc = Vector2(textEdit.get_caret_line(),textEdit.get_caret_column())
 #		var line = textEdit.get_word_under_cursor()
@@ -411,6 +402,7 @@ func _input(event):
 			_fireBow(player, 1)
 		return
 	elif event.is_action_pressed("paste") and DisplayServer.clipboard_get():
+		#var extensions = ["ogg", "ogv", "mp3"]
 		var take = DisplayServer.clipboard_get()
 		print(take)
 		take = _clean_pasted_text(take)
@@ -590,7 +582,7 @@ func _input(event):
 					return
 				index += 1
 			if currentRoom > -1:
-				levelLabel.text = "Press '~' or 'L' to enter level editor (Ctrl+S to save), or drag'n'drop or copy'n'paste a level in!"
+				levelLabel.text = "Press Control + '~' or 'L' to enter level editor (Ctrl+S to save), or drag'n'drop or copy'n'paste a level in!"
 				if OS.get_name() == "HTML5":
 					levelLabel.text += " On web you may need to use the browser's Edit -> Paste."
 				if not is_muted:
@@ -610,6 +602,25 @@ func _input(event):
 func _physics_process(delta):
 	if scoringTimer:
 		scoring["Time (s)"] += delta
+		
+func flip_level_edit():
+	$VSplitContainer.visible = opposite
+	opposite = !opposite
+	frozenInputs = opposite
+	textEdit.visible = opposite
+#		Copy current level to editor
+	if textEdit.visible:
+		if not is_muted:
+			DisplayServer.tts_speak("Now level editing.", voice[0])
+		textEdit.grab_focus()
+		textEdit.text = ""
+		textEdit.text = levelLabel.text
+		if not game_array:
+			textEdit.text = ""
+		return
+	else:
+		levelLabel.grab_focus()
+		DisplayServer.tts_speak("No longer editing.", voice[0], 50, 1.0, 1.0, 0, true)
 
 func verify_save(save):
 	if not save:
@@ -715,6 +726,7 @@ func start_over():
 	waitingOn = "Start"
 	statusLabel.text = "Press Anything"
 	if not is_muted:
+		DisplayServer.tts_stop()
 		DisplayServer.tts_speak("You are hunting L on floor X,\n do not fail us!" + "\nPress F1 or question mark for help!", voice[0])
 	
 func _process_turn(array, dir):
@@ -726,6 +738,7 @@ func _process_turn(array, dir):
 	_reset_actor_turns()
 	if msgOfFinality:
 		if not is_muted:
+			DisplayServer.tts_stop()
 			DisplayServer.tts_speak("You are slain.", voice[0])
 		msgOfFinality = ""
 	await get_tree().process_frame
@@ -748,6 +761,8 @@ func _process_turn(array, dir):
 #				levelLabel.text += "\nYou leave the dungeon."
 				levelLabel.text += "\nScores:\n" + "Time: " + str(scoring['Time (s)']) + "\nSteps: " + str(scoring.Steps) + "\nKills:\n" + str(scoring.Kills)
 		if not is_muted:
+			if DisplayServer.tts_is_speaking():
+				DisplayServer.tts_stop()
 			DisplayServer.tts_speak(levelLabel.text, voice[0])
 	
 func _handle_look(event, dir):
@@ -783,6 +798,7 @@ func _handle_look(event, dir):
 #		yield(tts,"utterance_end")
 #		tts.stop()
 #		yield(get_tree(),"idle_frame")
+		DisplayServer.tts_stop()
 		DisplayServer.tts_speak(TTStext, voice[0])
 		
 # WORKING ON
@@ -821,11 +837,13 @@ func _handle_move_input(event, dir) -> bool:
 
 # Edits the array and returns to _move_actors(), handles player centered actions
 func _move_player(array, dir, actor) -> Array:
+	var importantHappen = false
 	scoring.Steps += 1
 	if dir == Vector2.ZERO:
 		print("You wait a minute.")
 		statusLabel.text = "You wait a minute."
 		if not is_muted:
+			DisplayServer.tts_stop()
 			DisplayServer.tts_speak("You wait a minute.", voice[0])
 		notiTimer.start()
 		return array
@@ -836,6 +854,7 @@ func _move_player(array, dir, actor) -> Array:
 	if Loc.x < 0 or Loc.x > array[0].size() - 1 or Loc.y < 0 or Loc.y > array.size() - 1:
 		statusLabel.text = "You touch the bounds."
 		if not is_muted:
+			DisplayServer.tts_stop()
 			DisplayServer.tts_speak("You touch the bounds.", voice[0])
 		notiTimer.start()
 		return array
@@ -843,22 +862,31 @@ func _move_player(array, dir, actor) -> Array:
 	var Dest = array[Loc.y][Loc.x]
 	var a = array
 	if Dest in INTERACTS or Dest in ENTITIES:
+		if not is_muted:
+			DisplayServer.tts_stop()
 		a = _handle_player_interaction(Dest, Loc, array)
+		importantHappen = true
 	if Dest in COLLIDES or Dest in ENTITIES:
 		if Dest in COLLIDES:
 			statusLabel.text = "You feel: " + str(ALL[Dest])
 			if not is_muted:
+				DisplayServer.tts_stop()
+				importantHappen = true
 				DisplayServer.tts_speak("You feel: " + ALL[Dest], voice[0])
 		return array
 	if Dest in WEAPONS:
 		_grab_weapon(Dest)
+		importantHappen = true
 	if Dest in ARMORS:
 		_grab_armor(Dest)
+		importantHappen = true
 	
 	a[Pos.y][Pos.x] = "."
 	a[Loc.y][Loc.x] = "@"
 	actor.Loc += dir
-	if not is_muted:	
+	if not is_muted:
+		if not importantHappen:
+			DisplayServer.tts_stop()
 		DisplayServer.tts_speak(actor.Char + str(actor.Loc), voice[0])
 #	yield(tts,"utterance_end")
 #	tts.stop()

@@ -128,4 +128,3 @@ func _fill_buffer():
 	while to_fill > 0:
 		playback.push_frame(buffer[to_fill%buffer_size])
 		to_fill -= 1
-
