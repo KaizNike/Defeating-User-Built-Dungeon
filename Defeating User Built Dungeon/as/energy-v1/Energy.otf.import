@@ -15,6 +15,7 @@ dest_files=["res://.godot/imported/Energy.otf-66236a3f56b5d9300b0b06e38c40ed79.f
 Rendering=null
 antialiasing=1
 generate_mipmaps=false
+disable_embedded_bitmaps=true
 multichannel_signed_distance_field=false
 msdf_pixel_range=8
 msdf_size=48

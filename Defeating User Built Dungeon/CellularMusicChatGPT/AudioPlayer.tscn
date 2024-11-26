@@ -178,6 +178,12 @@ follow_focus = true
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="Label" type="Label" parent="VSplitContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+focus_mode = 2
+theme = ExtResource("6")
+text = "Drag n drop: .ogv, .ogg, .mp3"
+
 [node name="PanelContainer" parent="VSplitContainer/ScrollContainer/VBoxContainer" instance=ExtResource("3")]
 visible = false
 layout_mode = 2

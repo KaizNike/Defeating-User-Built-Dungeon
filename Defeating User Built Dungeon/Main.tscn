@@ -50,6 +50,7 @@ visible = false
 [node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer"]
 layout_mode = 2
 size_flags_vertical = 1
+focus_mode = 2
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 4

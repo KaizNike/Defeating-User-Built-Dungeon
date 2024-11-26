@@ -2,9 +2,9 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 21, 1, "-alpha"]
+var version = [0, 21, 2, "-alpha"]
 # Filehandling + Music Fixes
-## Patch - Fixes + Version Change to 4.3
+## Patch - Speech Fixes + Reupload to Laptop
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -148,7 +148,7 @@ func _ready():
 			DisplayServer.tts_speak("You are hunting L on floor X,\n do not fail us! \n" + "currently playing: " + currentSong.text + "\nPress F1 or question mark for help!", voice[0])
 		statusLabel.text = "Press Anything."
 		if not is_muted:
-			DisplayServer.tts_speak("Press Anything.", voice[0])
+			DisplayServer.tts_speak("Press Anything." + "\nAdditionally Drag n drop: .o g v, .o g g, .mp3 to play them in game!", voice[0])
 		waitingOn = "Start"
 	else:
 #		Reload autosave
@@ -167,9 +167,10 @@ func _ready():
 		waiting = true
 		waitingOn = "Start"
 		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!"
+		levelLabel.grab_focus()
 		statusLabel.text = "Press Anything."
 		if not is_muted:
-			DisplayServer.tts_speak("You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!\n" + "currently playing: " + currentSong.text + "\nPress anything.", voice[0])
+			DisplayServer.tts_speak("You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!\nPress anything." + "\nAdditionally Drag n drop: .o g v, .o g g, .mp3 to play them in game!", voice[0])
 		
 	
 class SortingActors:
@@ -586,6 +587,7 @@ func _input(event):
 				if OS.get_name() == "HTML5":
 					levelLabel.text += " On web you may need to use the browser's Edit -> Paste."
 				if not is_muted:
+					DisplayServer.tts_stop()
 					DisplayServer.tts_speak(levelLabel.text, voice[0])
 				statusLabel.text = "World is empty."
 				if not is_muted:
