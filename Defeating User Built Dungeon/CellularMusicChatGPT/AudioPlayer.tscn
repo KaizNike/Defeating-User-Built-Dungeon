@@ -191,7 +191,6 @@ size_flags_horizontal = 11
 musicNum = 0
 
 [node name="CellMusicContainer" type="PanelContainer" parent="VSplitContainer/ScrollContainer/VBoxContainer"]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 11
 theme = ExtResource("6")
@@ -229,7 +228,6 @@ text = "300.0"
 
 [node name="SineWave" type="AudioStreamPlayer" parent="VSplitContainer/ScrollContainer/VBoxContainer/CellMusicContainer"]
 stream = SubResource("1")
-volume_db = -40.788
 pitch_scale = 0.8
 script = ExtResource("7_8kh1m")
 

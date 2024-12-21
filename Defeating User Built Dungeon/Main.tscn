@@ -47,6 +47,9 @@ custom_minimum_size = Vector2(100, 40)
 [node name="HBoxContainer2" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer" index="1"]
 visible = false
 
+[node name="SineWave" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/ScrollContainer/VBoxContainer/CellMusicContainer" index="1"]
+volume_db = -24.361
+
 [node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer"]
 layout_mode = 2
 size_flags_vertical = 1

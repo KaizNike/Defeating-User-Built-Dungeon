@@ -140,6 +140,7 @@ func _ready():
 		print(Rooms.size())
 		game_array = _get_text_as_array(Rooms[0])
 		_actors_init(game_array)
+		Globals.emit_signal("init_automatons_for_data_sound", actors, Rooms[currentRoom])
 		scoring = scoringOrig.duplicate(true)
 		save_game(autosaveLoc)
 		levelLabel.text = "You are hunting L on floor X,\n do not fail us! \nPress F1 or question mark for help!"
@@ -164,6 +165,7 @@ func _ready():
 			xindex = 0
 			yindex += 1
 		_actors_init(game_array)
+		Globals.emit_signal("init_automatons_for_data_sound", actors, Rooms[currentRoom])
 		waiting = true
 		waitingOn = "Start"
 		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!"

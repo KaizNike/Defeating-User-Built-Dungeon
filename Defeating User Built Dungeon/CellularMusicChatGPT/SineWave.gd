@@ -1,30 +1,289 @@
+##extends AudioStreamPlayer
+##
+##var reading = false
+##var playback # Will hold the AudioStreamGeneratorPlayback.
+##@onready var sample_hz = self.stream.mix_rate
+##var pulse_hz = 440.0 # The frequency of the sound wave.
+##
+##func _ready():
+	##self.play()
+	##playback = self.get_stream_playback()
+	##fill_buffer()
+	##if not reading:
+		##stop()
+	##
+##
+##func _process(delta):
+	##if reading:
+		##print(playback.get_frames_available())
+		##fill_buffer()
+	##else:
+		##stop()
+##
+##func fill_buffer():
+	##var phase = 0.0
+	##var increment = pulse_hz / sample_hz
+	##var frames_available = playback.get_frames_available()
+##
+	##for i in range(frames_available):
+		##playback.push_frame(Vector2.ONE * sin(phase * TAU))
+		##phase = fmod(phase + increment, 1.0)
+		#
+#extends AudioStreamPlayer
+#
+#var playback: AudioStreamPlayback = null
+#
+#var sample_rate = 22050
+#var buffer_size = 35500
+#var automaton_iterations = buffer_size / 2
+#var automaton_rule = 28
+#var steps = randi() % 128 + 1
+#
+#var low_pass_filter
+#var cutoff_freq = 12000.0
+#
+#var automaton = []
+#var scale = []
+#var notes = []
+#var buffer = PackedVector2Array()
+#var input_history = []
+#var output_history = []
+#var Stream = AudioStreamOggVorbis.new()
+#var reading = true
+#
+#func _ready():
+	#randomize()
+##	get_tree().connect("files_dropped", self, "_files_dropped")
+	#Globals.connect("init_automatons_for_data_sound", Callable(self, "init_automatons"))
+	#for i in range(64):
+		#scale.append(i)
+		#notes.append(60 + i % 12)
+	#stream.mix_rate = sample_rate
+	#for i in range(buffer_size):
+		#buffer.append(Vector2.ZERO)
+	## Start playing audio stream
+	#playback = get_stream_playback()
+	#set_bus("Master")
+	#await "init_automatons"
+	#play()
+	#pass
+	#
+#func init_automatons(actorsArray : Array, cells : Vector2) -> bool:
+	#automaton.clear()
+	#clear_buffer()
+	#for i in cells.y:
+		#for j in cells.x:
+			#automaton.append(0)
+	#for actor in actorsArray:
+		#if actor.Char == "@":
+			#continue
+		#else:
+			#automaton[actor.Loc.y*cells.y+actor.Loc.x] = 1
+	#return true
+#
+#func _process(delta):
+	#if not reading:
+##		var Buffer = openFile.get_buffer(buffer_size)
+		#pass
+	#else:
+		#_fill_buffer()
+		#pass
+#
+#
+#var output = 0.0
+#var alpha = 0.0
+#
+#func _init():
+	#update_alpha()
+#
+#
+#func update_alpha():
+	#var dt = 1.0 / sample_rate
+	#var rc = 1.0 / (2.0 * PI * cutoff_freq)
+	#alpha = dt / (rc + dt)
+#
+#func process_sample(input: float) -> float:
+	#var output_highpass = input - output
+	#var input_prev
+	#if input_history.size() > 0:
+		#input_prev = input_history.pop_front()
+	#else:
+		#input_prev = input
+	#var output_prev
+	#if output_history.size() > 0:
+		#output_prev = output_history.pop_front()
+	#else:
+		#output_prev = output_highpass
+	#var input_filtered = (input * alpha) + (input_prev * (1.0 - alpha))
+	#var output_filtered = (output_highpass * alpha) + (output_prev * (1.0 - alpha))
+	#input_history.push_back(input_filtered)
+	#output_history.push_back(output_filtered)
+	#output = input_filtered
+	#return output_filtered
+#
+#func set_cutoff_freq(freq: float):
+	#cutoff_freq = freq
+	#update_alpha()
+#
+#func clear_buffer():
+	#buffer.clear()
+	#for i in range(buffer_size):
+		#buffer.append(Vector2.ZERO)
+#
+#func _fill_buffer():
+	#if not automaton:
+		#return
+	#var randI = randi()
+	## Generate automaton
+	#for i in range(automaton_iterations):
+		#var left = automaton[(i - 1 + automaton.size()) % automaton.size()]
+		#var center = automaton[i%automaton.size()]
+		#var right = automaton[(i + 1) % automaton.size()]
+		#var pattern = left * 4 + center * 2 + right
+		#if randI % steps == i:
+			#automaton_rule = randi() % 256
+			#steps = randi() % 128 + 1
+		#automaton[i%automaton.size()] = (automaton_rule >> pattern) & 1
+	#
+	## Generate audio buffer
+	#for i in range(buffer_size):
+		#var note = notes[scale[automaton[i % automaton.size()]]]
+		#var freq = pow(2, (note - 69) / 12) * 440
+		#var sample = sin(i * PI / sample_rate * freq)
+		#var volume = (automaton[i%automaton.size()]) * 0.5 + 0.5
+		#sample = process_sample(sample)
+		#buffer.set(i, Vector2(volume, volume)*sample)
+	#
+	## Push buffer to audio stream
+	#var to_fill = playback.get_frames_available()
+	#while to_fill > 0:
+		#playback.push_frame(buffer[to_fill%buffer_size])
+		#to_fill -= 1
+		
 extends AudioStreamPlayer
 
-var reading = false
-var playback # Will hold the AudioStreamGeneratorPlayback.
-@onready var sample_hz = self.stream.mix_rate
-var pulse_hz = 440.0 # The frequency of the sound wave.
+var playback: AudioStreamPlayback = null
+
+var sample_rate = 22050
+var buffer_size = 35500
+var automaton_iterations = buffer_size / 2
+var automaton_rule = 28
+var steps = randi() % 128 + 1
+
+var low_pass_filter
+var cutoff_freq = 12000.0
+
+var automaton = []
+var scale = []
+var notes = []
+var buffer = PackedVector2Array()
+var input_history = []
+var output_history = []
+var Stream = AudioStreamOggVorbis.new()
+var reading = true
 
 func _ready():
-	self.play()
-	playback = self.get_stream_playback()
-	fill_buffer()
-	if not reading:
-		stop()
-	
+	randomize()
+	Globals.connect("init_automatons_for_data_sound", Callable(self, "init_automatons"))
+	for i in range(64):
+		scale.append(i)
+		notes.append(60 + i % 12)
+	stream.mix_rate = sample_rate
+	for i in range(buffer_size):
+		buffer.append(Vector2.ZERO)
+	# Start playing audio stream
+	playback = get_stream_playback()
+	set_bus("Master")
+	await "init_automatons"
+	play()
+	pass
+
+func init_automatons(actorsArray : Array, cells : Vector2) -> bool:
+	automaton.clear()
+	clear_buffer()
+	for i in cells.y:
+		for j in cells.x:
+			automaton.append(0)
+	for actor in actorsArray:
+		if actor.Char == "@":
+			continue
+		else:
+			automaton[actor.Loc.y*cells.y+actor.Loc.x] = 1
+	return true
 
 func _process(delta):
-	if reading:
-		print(playback.get_frames_available())
-		fill_buffer()
+	if not reading:
+		pass
 	else:
-		stop()
+		_fill_buffer()
+		pass
 
-func fill_buffer():
-	var phase = 0.0
-	var increment = pulse_hz / sample_hz
-	var frames_available = playback.get_frames_available()
+var output = 0.0
+var alpha = 0.0
 
-	for i in range(frames_available):
-		playback.push_frame(Vector2.ONE * sin(phase * TAU))
-		phase = fmod(phase + increment, 1.0)
+func _init():
+	update_alpha()
+
+func update_alpha():
+	var dt = 1.0 / sample_rate
+	var rc = 1.0 / (2.0 * PI * cutoff_freq)
+	alpha = dt / (rc + dt)
+
+func process_sample(input: float) -> float:
+	var output_highpass = input - output
+	var input_prev
+	if input_history.size() > 0:
+		input_prev = input_history.pop_front()
+	else:
+		input_prev = input
+	var output_prev
+	if output_history.size() > 0:
+		output_prev = output_history.pop_front()
+	else:
+		output_prev = output_highpass
+	var input_filtered = (input * alpha) + (input_prev * (1.0 - alpha))
+	var output_filtered = (output_highpass * alpha) + (output_prev * (1.0 - alpha))
+	input_history.push_back(input_filtered)
+	output_history.push_back(output_filtered)
+	output = input_filtered
+	return output_filtered
+
+func set_cutoff_freq(freq: float):
+	cutoff_freq = freq
+	update_alpha()
+
+func clear_buffer():
+	buffer.clear()
+	for i in range(buffer_size):
+		buffer.append(Vector2.ZERO)
+
+func _fill_buffer():
+	if not automaton:
+		return
+	var randI = randi()
+	# Generate automaton
+	for i in range(automaton_iterations):
+		var left = automaton[(i - 1 + automaton.size()) % automaton.size()]
+		var center = automaton[i%automaton.size()]
+		var right = automaton[(i + 1) % automaton.size()]
+		var pattern = left * 4 + center * 2 + right
+		if randI % steps == i:
+			automaton_rule = randi() % 256
+			steps = randi() % 128 + 1
+		automaton[i%automaton.size()] = (automaton_rule >> pattern) & 1
+	
+	# Generate audio buffer
+	for i in range(buffer_size):
+		var note = notes[scale[automaton[i % automaton.size()]]]
+		var freq = pow(2, (note - 69) / 12) * 440
+		var sample = sin(i * PI / sample_rate * freq)
+		var volume = (automaton[i%automaton.size()]) * 0.5 + 0.5
+		sample = process_sample(sample)
+		buffer.set(i, Vector2(volume, volume)*sample)
+	
+	# Push buffer to audio stream
+	if playback:
+		var to_fill = playback.get_frames_available()
+		while to_fill > 0:
+			playback.push_frame(buffer[to_fill % buffer_size])
+			to_fill -= 1
