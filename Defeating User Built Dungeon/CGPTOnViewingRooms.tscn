@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://bh6r4fs83tmay"]
 
-[ext_resource path="res://CGPTOnViewingRooms.gd" type="Script" id=1]
+[ext_resource type="Script" uid="uid://dfh8gdngxljph" path="res://CGPTOnViewingRooms.gd" id="1"]
 
 [node name="CGPTOnViewingRooms" type="Node"]
-script = ExtResource( 1 )
+script = ExtResource("1")

@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3 uid="uid://bd62noqnphu2"]
 
-[ext_resource type="Script" path="res://Main.gd" id="1"]
+[ext_resource type="Script" uid="uid://kwutf625h3bs" path="res://Main.gd" id="1"]
 [ext_resource type="FontFile" path="res://Font.tres" id="2"]
-[ext_resource type="Script" path="res://Save_Script.gd" id="3"]
+[ext_resource type="Script" uid="uid://c0al5u4ownohu" path="res://Save_Script.gd" id="3"]
 [ext_resource type="PackedScene" uid="uid://dlo5myqhdgvi6" path="res://CellularMusicChatGPT/AudioPlayer.tscn" id="4"]
 [ext_resource type="Theme" uid="uid://dueujeo1gy1ky" path="res://FontTheme.tres" id="5"]
 
@@ -23,6 +23,7 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="CellMusicChatGPT3" parent="VSplitContainer/VSplitContainer" instance=ExtResource("4")]
+visible = false
 layout_mode = 2
 size_flags_vertical = 3
 

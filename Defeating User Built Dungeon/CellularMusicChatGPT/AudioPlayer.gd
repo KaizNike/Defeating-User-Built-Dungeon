@@ -30,6 +30,7 @@ func _ready():
 	pass
 
 func _files_dropped(files):
+	self.show()
 	var fileIndex = 0
 	var extensions = ["ogg", "ogv", "mp3"]
 	for file in files:

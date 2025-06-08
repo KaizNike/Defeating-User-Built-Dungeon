@@ -2,9 +2,9 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 21, 2, "-alpha"]
-# Filehandling + Music Fixes
-## Patch - Speech Fixes + Reupload to Laptop
+var version = [0, 21, 3, "-alpha"]
+# Dictionary Handling
+## Update to 4.4
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -870,11 +870,18 @@ func _move_player(array, dir, actor) -> Array:
 		importantHappen = true
 	if Dest in COLLIDES or Dest in ENTITIES:
 		if Dest in COLLIDES:
-			statusLabel.text = "You feel: " + str(ALL[Dest])
-			if not is_muted:
-				DisplayServer.tts_stop()
-				importantHappen = true
-				DisplayServer.tts_speak("You feel: " + ALL[Dest], voice[0])
+			if Dest in ALL:
+				statusLabel.text = "You feel: " + str(ALL.get(Dest))
+				if not is_muted:
+					DisplayServer.tts_stop()
+					importantHappen = true
+					DisplayServer.tts_speak("You feel: " + ALL.get(Dest), voice[0])
+			else:
+				statusLabel.text = "You feel: " + "Something odd..."
+				if not is_muted:
+					DisplayServer.tts_stop()
+					importantHappen = true
+					DisplayServer.tts_speak("You feel: " + "Something odd...", voice[0])
 		return array
 	if Dest in WEAPONS:
 		_grab_weapon(Dest)
@@ -1828,6 +1835,10 @@ func _stack_alike_strings(S:String) -> String:
 		for Char in row:
 #			if Char == "\n":
 #				continue
+			if ALL.has(Char):
+				pass
+			else:
+				continue
 			var translated_char = ALL[Char]
 			if current_string == "":
 				current_string = translated_char + " times 1"

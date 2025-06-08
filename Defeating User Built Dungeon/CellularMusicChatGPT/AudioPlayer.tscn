@@ -2,11 +2,11 @@
 
 [ext_resource type="FontFile" uid="uid://wwxwvtqncom0" path="res://as/energy-v1/Energy.otf" id="2"]
 [ext_resource type="PackedScene" uid="uid://db1j83qba7eyj" path="res://CellularMusicChatGPT/MusicPlaying.tscn" id="3"]
-[ext_resource type="Script" path="res://CellularMusicChatGPT/Visualizer.gd" id="4"]
-[ext_resource type="Script" path="res://CellularMusicChatGPT/AudioPlayer.gd" id="5"]
+[ext_resource type="Script" uid="uid://1apn6l4bv0wb" path="res://CellularMusicChatGPT/Visualizer.gd" id="4"]
+[ext_resource type="Script" uid="uid://bn2euvqvt5wko" path="res://CellularMusicChatGPT/AudioPlayer.gd" id="5"]
 [ext_resource type="Theme" uid="uid://dueujeo1gy1ky" path="res://FontTheme.tres" id="6"]
-[ext_resource type="Script" path="res://CellularMusicChatGPT/CellMusicContainer.gd" id="7"]
-[ext_resource type="Script" path="res://CellularMusicChatGPT/SineWave.gd" id="7_8kh1m"]
+[ext_resource type="Script" uid="uid://b83poqqdcvp42" path="res://CellularMusicChatGPT/CellMusicContainer.gd" id="7"]
+[ext_resource type="Script" uid="uid://c7rhe5y0xtwvd" path="res://CellularMusicChatGPT/SineWave.gd" id="7_8kh1m"]
 
 [sub_resource type="FontFile" id="2"]
 fallbacks = Array[Font]([ExtResource("2"), ExtResource("2")])
