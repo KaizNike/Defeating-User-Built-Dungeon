@@ -5,12 +5,12 @@ var playback # Will hold the AudioStreamGeneratorPlayback.
 @onready var sample_hz = self.stream.mix_rate
 var pulse_hz = 440.0 # The frequency of the sound wave.
 
-func _ready():
-	self.play()
-	playback = self.get_stream_playback()
-	fill_buffer()
-	if not reading:
-		stop()
+#func _ready():
+	#self.play()
+	#playback = self.get_stream_playback()
+	#fill_buffer()
+	#if not reading:
+		#stop()
 	
 
 func _process(delta):

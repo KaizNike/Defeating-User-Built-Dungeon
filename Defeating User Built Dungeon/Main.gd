@@ -2,8 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 21, 3, "-alpha"]
-# Dictionary Handling
+var version = [0, 22, 0, "-alpha"]
+# Web Export Fix
 ## Update to 4.4
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
@@ -243,7 +243,7 @@ func _input(event):
 		statusLabel.text = "Escape again to quit."
 		DisplayServer.tts_speak(statusLabel.text, voice[0])
 		if escaping:
-			if OS.get_name() == "HTML5":
+			if OS.get_name() == "Web":
 				levelLabel.text = ""
 				statusLabel.text = "Game quit."
 				if not is_muted:
@@ -584,7 +584,7 @@ func _input(event):
 				index += 1
 			if currentRoom > -1:
 				levelLabel.text = "Press Control + '~' or 'L' to enter level editor (Ctrl+S to save), or drag'n'drop or copy'n'paste a level in!"
-				if OS.get_name() == "HTML5":
+				if OS.get_name() == "Web":
 					levelLabel.text += " On web you may need to use the browser's Edit -> Paste."
 				if not is_muted:
 					DisplayServer.tts_stop()

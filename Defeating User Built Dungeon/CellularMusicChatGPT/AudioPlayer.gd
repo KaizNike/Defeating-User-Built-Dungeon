@@ -68,6 +68,7 @@ func _files_dropped(files):
 				print(lineAudio)
 				#var openFile = FileAccess.open(file, FileAccess.READ)
 				var stream = AudioStreamOggVorbis.load_from_file(file)
+				stream.loop = true
 				lineAudio.stream = stream
 				#openFile.close()
 				endTime.text = str(lineAudio.stream.get_length()).pad_decimals(2)
@@ -88,6 +89,7 @@ func _files_dropped(files):
 				var openFile = FileAccess.open(file, FileAccess.READ)
 				var stream = AudioStreamMP3.new()
 				stream.data = openFile.get_buffer(openFile.get_length())
+				stream.loop = true
 				lineAudio.stream = stream
 				#openFile.close()
 				endTime.text = str(lineAudio.stream.get_length()).pad_decimals(2)

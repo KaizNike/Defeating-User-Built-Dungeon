@@ -15,6 +15,7 @@ script = ExtResource("1")
 layout_mode = 2
 
 [node name="SelectedCB" type="CheckBox" parent="MusicPlaying"]
+visible = false
 layout_mode = 2
 button_pressed = true
 
@@ -43,9 +44,22 @@ layout_mode = 2
 size_flags_vertical = 4
 text = "0.0"
 
-[node name="Label2" type="Label" parent="MusicPlaying"]
+[node name="Label3" type="Label" parent="MusicPlaying"]
+custom_minimum_size = Vector2(8, 0)
 layout_mode = 2
-text = "/ 0.0 /"
+text = "/ "
+clip_text = true
+
+[node name="Label2" type="LineEdit" parent="MusicPlaying"]
+layout_mode = 2
+size_flags_vertical = 4
+text = "0.0"
+
+[node name="Label4" type="Label" parent="MusicPlaying"]
+custom_minimum_size = Vector2(8, 0)
+layout_mode = 2
+text = "/ "
+clip_text = true
 
 [node name="LineEdit" type="LineEdit" parent="MusicPlaying"]
 layout_mode = 2
@@ -57,3 +71,4 @@ text = "300.0"
 [connection signal="toggled" from="MusicPlaying/SelectedCB" to="." method="_on_selected_cb_toggled"]
 [connection signal="pressed" from="MusicPlaying/Button" to="." method="_on_Button_pressed"]
 [connection signal="drag_ended" from="MusicPlaying/HSlider" to="." method="_on_h_slider_drag_ended"]
+[connection signal="text_changed" from="MusicPlaying/Label2" to="." method="_on_label_2_text_changed"]
