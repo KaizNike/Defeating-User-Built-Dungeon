@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://dlo5myqhdgvi6"]
+[gd_scene load_steps=11 format=3 uid="uid://dlo5myqhdgvi6"]
 
 [ext_resource type="FontFile" uid="uid://wwxwvtqncom0" path="res://as/energy-v1/Energy.otf" id="2"]
 [ext_resource type="PackedScene" uid="uid://db1j83qba7eyj" path="res://CellularMusicChatGPT/MusicPlaying.tscn" id="3"]
@@ -22,8 +22,6 @@ cache/0/16/0/kerning_overrides/16/0 = Vector2(0, 0)
 
 [sub_resource type="Theme" id="3"]
 default_font = SubResource("2")
-
-[sub_resource type="VideoStreamTheora" id="VideoStreamTheora_0ndsu"]
 
 [sub_resource type="AudioStreamGenerator" id="1"]
 mix_rate = 22050.0
@@ -91,12 +89,8 @@ clip_text = true
 custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 
-[node name="VideoStreamPlayer" type="VideoStreamPlayer" parent="VSplitContainer/HBoxContainer/VideoScreen"]
+[node name="VideoStreamPlayer" type="Panel" parent="VSplitContainer/HBoxContainer/VideoScreen"]
 layout_mode = 2
-stream = SubResource("VideoStreamTheora_0ndsu")
-expand = true
-loop = true
-buffering_msec = 1000
 
 [node name="Label" type="Label" parent="VSplitContainer/HBoxContainer/VideoScreen"]
 visible = false

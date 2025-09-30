@@ -5,7 +5,7 @@ var currentSongs := []
 var Stream = AudioStreamOggVorbis.new()
 var MP3Stream = AudioStreamMP3.new()
 #var videoStreamW = VideoStreamWebm.new()
-var videoStreamT = VideoStreamTheora.new()
+#var videoStreamT = VideoStreamTheora.new()
 var openFile = FileAccess
 @export var musicLineScene := PackedScene.new()
 
@@ -48,13 +48,13 @@ func _files_dropped(files):
 				#$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.play()
 				#print("I do not work well!")
 ##				print("thanks!")
-			"ogv":
-				videoStreamT.set_file(file)
-				$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.stream = videoStreamT
-				$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.play()
-				print($VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.is_playing())
-#				print("I do not work well!")
-#				print("thanks!")
+			#"ogv":
+				#videoStreamT.set_file(file)
+				#$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.stream = videoStreamT
+				#$VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.play()
+				#print($VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.is_playing())
+##				print("I do not work well!")
+##				print("thanks!")
 			"ogg":
 				var newLine = musicLineScene.instantiate()
 				var lineAudio = newLine.get_node("LineItemMusic")

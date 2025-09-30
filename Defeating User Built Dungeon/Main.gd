@@ -32,7 +32,8 @@ var isDarkMode = false
 var pageSelect = false
 var firing = false
 var opposite = false
-var lookLocation = Vector2.ZERO
+var dontFeel = false
+var lookLocation = Vector2i.ZERO
 var oldLook = ""
 var currentPageShown = 1
 var numOfPages = 0
@@ -83,12 +84,12 @@ const ALL = {"#": "Wall"," ": "Floor", ".": "You walked here", "?": "Your vision
 }
 
 const ENTITIES_DEFINES = {
-"Rat": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "r", "Behav": "Random", "Inv": [], "bodyDesc": "rat", "Relation": "Rats"},
-"Dingo": {"Speed": 3, "Turns": 2, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "n", "Behav": "Hungry", "Inv": [], "bodyDesc": "dingo", "Relation": "Dingos"},
-"Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
-"Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
-"Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"},
-"Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2.ZERO, "Dir": Vector2.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "OnTrajectory", "Inv": [], "bodyDesc": "broken shaft", "Relation": "Projectile"}
+"Rat": {"Speed": 2, "Turns": 2, "Loc": Vector2i.ZERO, "HP": 1, "DMG": 1, "Char": "r", "Behav": "Random", "Inv": [], "bodyDesc": "rat", "Relation": "Rats"},
+"Dingo": {"Speed": 3, "Turns": 2, "Loc": Vector2i.ZERO, "HP": 1, "DMG": 2, "Char": "n", "Behav": "Hungry", "Inv": [], "bodyDesc": "dingo", "Relation": "Dingos"},
+"Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2i.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
+"Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2i.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
+"Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2i.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"},
+"Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2i.ZERO, "Dir": Vector2i.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "OnTrajectory", "Inv": [], "bodyDesc": "broken shaft", "Relation": "Projectile"}
 }
 
 const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold", "Projectile"]
@@ -111,8 +112,8 @@ var item = {"Char": "", "Uses": 1, "Type": "Normal", "Value": 0}
 var scrollUse = ""
 
 var actors = []
-var being = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 1, "DMG": 2, "Char": "", "Behav": "Random", "Inv": [], "bodyDesc": "", "Relation": "None"}
-var player = {"Speed": 1, "Turns": 1, "Loc": Vector2.ZERO, "HP": 4, "DMG": 1, "Char": "@", "Behav": "Player", "Inv": [], "bodyDesc": "dead you", "Relation": "Self"}
+var being = {"Speed": 1, "Turns": 1, "Loc": Vector2i.ZERO, "HP": 1, "DMG": 2, "Char": "", "Behav": "Random", "Inv": [], "bodyDesc": "", "Relation": "None"}
+var player = {"Speed": 1, "Turns": 1, "Loc": Vector2i.ZERO, "HP": 4, "DMG": 1, "Char": "@", "Behav": "Player", "Inv": [], "bodyDesc": "dead you", "Relation": "Self"}
 var playerOrig = {}
 var scoring = {"Kills": "", "Steps": 0, "Time (s)": 0.0}
 var scoringOrig = {"Kills": "", "Steps": 0, "Time (s)": 0.0}
@@ -121,7 +122,7 @@ var scoringTimer = true
 var is_muted = false
 
 var corpses = []
-var body = {"Loc": Vector2.ZERO, "Inv": [], "Desc": ""}
+var body = {"Loc": Vector2i.ZERO, "Inv": [], "Desc": ""}
 
 func _ready():
 	randomize()
@@ -183,11 +184,11 @@ func _actors_init(array):
 	for y in range(array.size()):
 		for x in range(array[y].size()):
 			if array[y][x] in ENTITIES:
-				_being_init(Vector2(x,y),array[y][x])
+				_being_init(Vector2i(x,y),array[y][x])
 	if actors.size() > 1:
 		actors.sort_custom(Callable(SortingActors, "sort_descending"))
-		Globals.emit_signal("init_automatons_for_data_sound", actors, Vector2(game_array[0].size(), game_array.size()))
-#		$CellMusicChatGPT3.init_automatons(actors,Vector2(game_array[0].size(), game_array.size()))
+		Globals.emit_signal("init_automatons_for_data_sound", actors, Vector2i(game_array[0].size(), game_array.size()))
+#		$CellMusicChatGPT3.init_automatons(actors,Vector2i(game_array[0].size(), game_array.size()))
 	print(actors)
 	
 # TODO
@@ -224,7 +225,7 @@ func _input(event):
 #	Everything that causes input to be ignored
 	if event is InputEventMouseMotion or (waiting and waitingOn == "Quit"):
 		return
-	var dir = Vector2(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
+	var dir = Vector2i(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
 	print(event.as_text())
 #	print(escaping)
 	if event.is_action_pressed("escape"):
@@ -277,7 +278,7 @@ func _input(event):
 		temp_game_array = game_array.duplicate(true)
 		if not is_muted:
 			DisplayServer.tts_speak("You begin looking around, press escape to cancel.", voice[0])
-		_handle_look(event, Vector2.ZERO)
+		_handle_look(event, Vector2i.ZERO)
 		oldLook = "@"
 		alreadyLooking = true
 		return
@@ -285,7 +286,7 @@ func _input(event):
 		flip_level_edit()
 		return
 	if event.is_action_released("ui_move") and textEdit.visible:
-		var loc = Vector2(textEdit.get_caret_line(),textEdit.get_caret_column())
+		var loc = Vector2i(textEdit.get_caret_line(),textEdit.get_caret_column())
 #		var line = textEdit.get_word_under_cursor()
 		var line = textEdit.get_line(loc.x)
 		print(str(loc)+" "+line)
@@ -374,7 +375,7 @@ func _input(event):
 		_status_bar_update()
 		escaping = false
 	elif firing and event.is_pressed():
-		var fireDir = Vector2(event.get_action_strength("fire_right") - event.get_action_strength("fire_left"), event.get_action_strength("fire_down") - event.get_action_strength("fire_up"))
+		var fireDir = Vector2i(event.get_action_strength("fire_right") - event.get_action_strength("fire_left"), event.get_action_strength("fire_down") - event.get_action_strength("fire_up"))
 		print(fireDir)
 		if not fireDir and _handle_move_input(event, dir):
 			firing = false
@@ -784,7 +785,7 @@ func _handle_look(event, dir):
 	print(temp_game_array[lookLocation.y][lookLocation.x])
 	if temp_game_array[lookLocation.y][lookLocation.x] in ALL.keys():
 		statusLabel.text = "You see: " +  str(ALL[temp_game_array[lookLocation.y][lookLocation.x]])
-		TTStext = str("You look and see: "+ALL[temp_game_array[lookLocation.y][lookLocation.x]]+" @ "+str(Vector2(lookLocation.x,lookLocation.y)))
+		TTStext = str("You look and see: "+ALL[temp_game_array[lookLocation.y][lookLocation.x]]+" @ "+str(Vector2i(lookLocation.x,lookLocation.y)))
 	else:
 		statusLabel.text = "You can't _recognize that."
 		TTStext = "You can't _recognize that."
@@ -804,7 +805,7 @@ func _handle_look(event, dir):
 		DisplayServer.tts_speak(TTStext, voice[0])
 		
 # WORKING ON
-func _handle_examine(dest:Vector2):
+func _handle_examine(dest:Vector2i):
 	var target = oldLook
 #	IF PLAYER LOOKS AT SELF
 	if target == "@":
@@ -832,7 +833,7 @@ func _handle_examine(dest:Vector2):
 
 
 func _handle_move_input(event, dir) -> bool:
-	if dir != Vector2.ZERO or event.is_action_pressed("wait"):
+	if dir != Vector2i.ZERO or event.is_action_pressed("wait"):
 		_process_turn(game_array,dir)
 		return true
 	return false
@@ -841,7 +842,7 @@ func _handle_move_input(event, dir) -> bool:
 func _move_player(array, dir, actor) -> Array:
 	var importantHappen = false
 	scoring.Steps += 1
-	if dir == Vector2.ZERO:
+	if dir == Vector2i.ZERO:
 		print("You wait a minute.")
 		statusLabel.text = "You wait a minute."
 		if not is_muted:
@@ -868,7 +869,9 @@ func _move_player(array, dir, actor) -> Array:
 			DisplayServer.tts_stop()
 		a = _handle_player_interaction(Dest, Loc, array)
 		importantHappen = true
-	if Dest in COLLIDES or Dest in ENTITIES:
+	if (Dest in COLLIDES or Dest in ENTITIES):
+		if dontFeel:
+			return array
 		if Dest in COLLIDES:
 			if Dest in ALL:
 				statusLabel.text = "You feel: " + str(ALL.get(Dest))
@@ -900,6 +903,7 @@ func _move_player(array, dir, actor) -> Array:
 #	yield(tts,"utterance_end")
 #	tts.stop()
 #	yield(get_tree(),"idle_frame")
+	dontFeel = false
 	return a
 
 # Needs rework into a nonloop to get yields working for speech
@@ -976,7 +980,7 @@ func _move_actors(array, dir) -> Array:
 #				yield(get_tree(),"idle_frame")
 				Actor.Turns -= 1
 		elif Actor.Behav == "Hungry":
-			var actorDir = Vector2.ZERO
+			var actorDir = Vector2i.ZERO
 			print("A Hungry One At: " + str(Actor.Loc))
 			print(corpses.size())
 			if corpses.size() > 0:
@@ -988,7 +992,7 @@ func _move_actors(array, dir) -> Array:
 					if checkDistance < distance:
 						distance = checkDistance
 						finalCorpse = corpse
-				actorDir = Vector2(clamp(finalCorpse.Loc.x-Actor.Loc.x,-1,1),clamp(finalCorpse.Loc.y-Actor.Loc.y,-1,1))
+				actorDir = Vector2i(clamp(finalCorpse.Loc.x-Actor.Loc.x,-1,1),clamp(finalCorpse.Loc.y-Actor.Loc.y,-1,1))
 			else:
 				print("Hunger for actors.")
 				var distance = 100
@@ -1001,7 +1005,7 @@ func _move_actors(array, dir) -> Array:
 							finalActor = actor
 				print(finalActor.Loc)
 				print(Actor.Loc)
-				actorDir = Vector2(clamp(finalActor.Loc.x-Actor.Loc.x,-1,1), clamp(finalActor.Loc.y-Actor.Loc.y,-1,1))
+				actorDir = Vector2i(clamp(finalActor.Loc.x-Actor.Loc.x,-1,1), clamp(finalActor.Loc.y-Actor.Loc.y,-1,1))
 				print(actorDir)
 			var actorLoc = Actor.Loc + actorDir
 			print("Hungry One To: " + str(actorLoc))
@@ -1057,9 +1061,9 @@ func _move_actors(array, dir) -> Array:
 			var y = 0
 			if x == 0:
 				y = randi()%3-1
-			var actorDir = Vector2(x,y)
+			var actorDir = Vector2i(x,y)
 			print(actorDir)
-#					var actorDir = Vector2(-1,0)
+#					var actorDir = Vector2i(-1,0)
 			var actorLoc = Actor.Loc + actorDir
 			if actorLoc.x < 0 or actorLoc.x > array[0].size() - 1 or actorLoc.y < 0 or actorLoc.y > array.size() - 1:
 				continue
@@ -1119,7 +1123,7 @@ func _reset_actor_turns():
 		actor.Turns = actor.Speed
 
 func _find_player(array):
-	var Pos = Vector2.ZERO
+	var Pos = Vector2i.ZERO
 	for y in array:
 		for x in y:
 			if x == "@":
@@ -1129,7 +1133,7 @@ func _find_player(array):
 		Pos.y += 1
 
 
-func get_distance(selfLoc:Vector2, targetLoc:Vector2):
+func get_distance(selfLoc:Vector2i, targetLoc:Vector2i):
 	return sqrt(pow(selfLoc.x-targetLoc.x, 2) + pow(selfLoc.y-targetLoc.y,2))
 
 func _handle_actor_interaction(actor, type, loc) -> bool:
@@ -1227,7 +1231,12 @@ func _handle_player_interaction(type, loc, array):
 	elif type == "D":
 		var result = _find_and_use_item("Y", player)
 		if result:
+			dontFeel = true
 			a[loc.y][loc.x] = " "
+			statusLabel.text = "Door unlocked, used key."
+			$NotificationTimer.start()
+			if not is_muted:
+				DisplayServer.tts_speak("Door unlocked, used key.",voice[0])
 	elif type == "%":
 		var bodyIndex = 0
 		for Body in corpses:
@@ -1236,9 +1245,9 @@ func _handle_player_interaction(type, loc, array):
 				if not Body.Inv:
 					T += "nothing!"
 				else:
-					for item in Body.Inv:
-						_add_item_to_player_inv(item)
-						T += item.Char
+					for Item in Body.Inv:
+						_add_item_to_player_inv(Item)
+						T += Item.Char
 				print(player.Inv)
 				statusLabel.text = T
 				if not is_muted:
@@ -1253,8 +1262,13 @@ func _handle_player_interaction(type, loc, array):
 				if actor.Char == type and actor.Loc == loc:
 					_add_corpse(actor)
 					scoring.Kills += actor.Char
+					if ALL.has(actor.Char):
+						var text = "Defeated " + ALL[actor.Char]
+						statusLabel.text = text
+						$NotificationTimer.start()
+						if not is_muted:
+							DisplayServer.tts_speak(text,voice[0])
 	return a
-	pass
 
 
 func _grab_weapon(Char):
@@ -1755,24 +1769,24 @@ func _clean_pasted_text(text:String) -> String:
 func _fireBow(Actor, Dir):
 	match Dir:
 		9:
-			Dir = Vector2(-1,-1)
+			Dir = Vector2i(-1,-1)
 		8:
-			Dir = Vector2(0,-1)
+			Dir = Vector2i(0,-1)
 		7:
-			Dir = Vector2(1,-1)
+			Dir = Vector2i(1,-1)
 		6:
-			Dir = Vector2(1,0)
+			Dir = Vector2i(1,0)
 		5:
 			firing = false
 			return
 		4:
-			Dir = Vector2(-1,0)
+			Dir = Vector2i(-1,0)
 		3:
-			Dir = Vector2(1,1)
+			Dir = Vector2i(1,1)
 		2:
-			Dir = Vector2(0,1)
+			Dir = Vector2i(0,1)
 		1:
-			Dir = Vector2(-1,1)
+			Dir = Vector2i(-1,1)
 	var bow = _find_and_use_item("B", Actor)
 	var arrow = _find_and_use_item("-", Actor)
 	if bow and arrow:
