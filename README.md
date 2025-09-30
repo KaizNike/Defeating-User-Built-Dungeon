@@ -1,7 +1,7 @@
 # Defeating User Built Dungeon
  Godot text-based roguelike where you supply the levels.
  [Play on itch](https://kaizarnike.itch.io/defeating-user-built-dungeon)
- Uses Godot v4.3 (awaiting full release)
+ Uses Godot v4.5 (awaiting full release)
 
 ![Banner Fifth Version, A Dungeon with many rats](.//v0.7-alpha-screen4.png)
 
@@ -18,6 +18,18 @@ Make a 'moddable' roguelike in Godot. Really one that anyone can make maps for.
 Important characters are '#' for walls, '@' for you the player, and '>' to proceed to next level. More characters are hoped to be added later. Currently 'Y', 'D', 'r', and 'X' all have a use.
 
 Try 'n' for a hostile foe that makes looting annoying.
+
+### ALL tiles:
+const ALL = {"#": "Wall"," ": "Floor", ".": "You walked here", "?": "Your vision",
+#### Interacts
+">": "Down Stair", "<": "Up Stair", "Y": "Door Key", "y": "Chest Key", "D": "a locked door", "K": "Skeleton3D Key", "%": "Body", "+": "Healing Potion", "c": "Chest",
+#### Entities
+"r": "Rat", "n": "Dingo", "k": "Kobold", "g": "Goblin", "L": "Lich", "@": "You.", "x": "Crate",
+#### Weapons
+"T": "Sword", "S": "Whip", "Z": "Scroll", "V": "Shovel", "E": "Trident",
+#### Ranged
+"B": "Bow"
+}
 
 ## How to Contribute
 This is mainly a personal learning project, so create issues, enter discussion, or make your own fork.
