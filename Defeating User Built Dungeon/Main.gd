@@ -2,9 +2,9 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 23, 0, "-alpha"]
-var versionInfo = """# Vector2i Switch
-## Update to 4.5"""
+var version = [0, 24, 0, "-alpha-bbranch"]
+var versionInfo = """# 3D Audio Start
+## Seems like too much work for now."""
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 

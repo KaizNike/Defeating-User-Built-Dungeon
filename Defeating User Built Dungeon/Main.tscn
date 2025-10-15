@@ -1,10 +1,28 @@
-[gd_scene load_steps=6 format=3 uid="uid://bd62noqnphu2"]
+[gd_scene load_steps=11 format=3 uid="uid://bd62noqnphu2"]
 
 [ext_resource type="Script" uid="uid://kwutf625h3bs" path="res://Main.gd" id="1"]
 [ext_resource type="FontFile" path="res://Font.tres" id="2"]
 [ext_resource type="Script" uid="uid://c0al5u4ownohu" path="res://Save_Script.gd" id="3"]
 [ext_resource type="PackedScene" uid="uid://dlo5myqhdgvi6" path="res://CellularMusicChatGPT/AudioPlayer.tscn" id="4"]
 [ext_resource type="Theme" uid="uid://dueujeo1gy1ky" path="res://FontTheme.tres" id="5"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_fos0i"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="MeshLibrary" id="MeshLibrary_3dxm6"]
+item/0/name = "wall"
+item/0/mesh = SubResource("BoxMesh_fos0i")
+item/0/mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/0/mesh_cast_shadow = 1
+item/0/shapes = []
+item/0/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+item/0/navigation_layers = 1
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_fos0i"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fos0i"]
+
+[sub_resource type="Environment" id="Environment_3dxm6"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1")
@@ -63,11 +81,7 @@ X..........X
 X..........X
 XXDXXXXXXXXX
 X..........X
-########################
-##
-#
-#
-#"
+############"
 autowrap_mode = 3
 
 [node name="StatusLabel" type="Label" parent="VSplitContainer"]
@@ -111,9 +125,40 @@ text = "Hello"
 
 [node name="Level3D" type="Node3D" parent="."]
 
-[node name="AudioListener3D" type="AudioListener3D" parent="Level3D"]
+[node name="CSGBox3D" type="CSGBox3D" parent="Level3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7593299, 0)
+use_collision = true
+size = Vector3(300, 1, 300)
+
+[node name="GridMap" type="GridMap" parent="Level3D"]
+mesh_library = SubResource("MeshLibrary_3dxm6")
+data = {
+"cells": PackedInt32Array(65534, 65535, 0, 65534, 1, 0, 65534, 0, 0, 2, 1, 0, 2, 0, 0, 2, 65535, 0)
+}
+
+[node name="CharacterBody3D" type="CharacterBody3D" parent="Level3D"]
+
+[node name="Player" type="CSGMesh3D" parent="Level3D/CharacterBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87758577, 0.9996321, 0.93799925)
+mesh = SubResource("CapsuleMesh_fos0i")
+
+[node name="AudioListener3D" type="AudioListener3D" parent="Level3D/CharacterBody3D/Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55508375, 0)
 doppler_tracking = 2
 current = true
+
+[node name="CSGBakedCollisionShape3D" type="CollisionShape3D" parent="Level3D/CharacterBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87758577, 0.9996321, 0.93799925)
+shape = SubResource("CapsuleShape3D_fos0i")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Level3D"]
+environment = SubResource("Environment_3dxm6")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Level3D/WorldEnvironment"]
+transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 3, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Level3D"]
+transform = Transform3D(1, 0, 0, 0, 0.49999997, 0.8660254, 0, -0.8660254, 0.49999997, 0, 15, 10)
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
 
