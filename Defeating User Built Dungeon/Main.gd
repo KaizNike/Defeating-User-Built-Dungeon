@@ -2,9 +2,9 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 22, 0, "-alpha"]
-# Web Export Fix
-## Update to 4.4
+var version = [0, 23, 0, "-alpha"]
+var versionInfo = """# Vector2i Switch
+## Update to 4.5"""
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -125,6 +125,9 @@ var corpses = []
 var body = {"Loc": Vector2i.ZERO, "Inv": [], "Desc": ""}
 
 func _ready():
+	print("Game Version: ", version, versionInfo)
+	if OS.get_name() == "Web":
+		is_muted = true
 	randomize()
 	#var check1 = get_tree().connect("files_dropped", Callable(self, "_files_dropped"))
 	var check1 = get_viewport().files_dropped.connect(_files_dropped)
@@ -1330,24 +1333,24 @@ func _show_help(shownPage):
 			1:
 				text += "Interactables:\n"
 				for Char in INTERACTS:
-					text += Char
+					text += Char + " "
 				altText += "Page 1/4, Page down for more"
 			2:
 				text += "Collidables:\n"
 				for Char in COLLIDES:
-					text += Char
+					text += Char + " "
 				altText += "Page 2/4, Page down for more"
 			3:
 				text += "Beings:\n"
 				for Char in ENTITIES:
-					text += Char
+					text += Char + " "
 				altText += "Page 3/4, Page down for more"
 			4:
 				text += "Weapons:\n"
 				for Char in WEAPONS:
-					text += Char
+					text += Char + " "
 				for Char in RANGED:
-					text += Char
+					text += Char + " "
 				altText += "Page 4/4, Page up for more"
 	print(text)
 	levelLabel.text = text
@@ -1355,6 +1358,8 @@ func _show_help(shownPage):
 	if not is_muted:
 		DisplayServer.tts_stop()
 		await get_tree().process_frame
+		text = text.replace(">", "greater than")
+		text = text.replace("<", "less than")
 		DisplayServer.tts_speak("Help: "+text+altText, voice[0])
 #		DisplayServer.tts_speak(altText, voice[0])
 		

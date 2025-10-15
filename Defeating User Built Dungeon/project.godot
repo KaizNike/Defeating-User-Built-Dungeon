@@ -11,13 +11,10 @@ config_version=5
 [application]
 
 config/name="Defeating User Built Dungeon"
+config/version="0.23"
 run/main_scene="res://Main.tscn"
 config/features=PackedStringArray("4.5")
 config/icon="res://as/@icon2small.png"
-
-[audio]
-
-general/text_to_speech=true
 
 [autoload]
 

@@ -30,14 +30,25 @@ func _ready():
 	pass
 
 func _files_dropped(files):
-	self.show()
-	var fileIndex = 0
 	var extensions = ["ogg", "ogv", "mp3"]
+	var importants = 0
+	for file in files:
+		if file.get_extension() in extensions:
+			importants += 1
+	if importants > 0:
+		self.show()
+	else:
+		return
+	#var fileIndex = 0
+	
 	for file in files:
 #		if fileIndex > 1:
 #			print("Only one music for now.")
 #			return
 		if file.get_extension() in extensions:
+			if file.get_extension() == ".ogv":
+				continue
+				print("ogv disabled for now")
 			pass
 		else:
 			continue
@@ -86,7 +97,7 @@ func _files_dropped(files):
 				currentSongs.append(file.get_file().get_slice(".mp3",0))
 				$VSplitContainer/HBoxContainer/CurrentSongLabel.text = currentSongs[currentSongs.size()-1]
 				print(lineAudio)
-				var openFile = FileAccess.open(file, FileAccess.READ)
+				openFile = FileAccess.open(file, FileAccess.READ)
 				var stream = AudioStreamMP3.new()
 				stream.data = openFile.get_buffer(openFile.get_length())
 				stream.loop = true

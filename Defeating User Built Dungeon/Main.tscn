@@ -49,6 +49,7 @@ custom_minimum_size = Vector2(100, 40)
 visible = false
 
 [node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer"]
+custom_minimum_size = Vector2(5, 5)
 layout_mode = 2
 size_flags_vertical = 1
 focus_mode = 2
@@ -107,6 +108,12 @@ offset_right = -36.2033
 offset_bottom = 130.126
 theme = ExtResource("5")
 text = "Hello"
+
+[node name="Level3D" type="Node3D" parent="."]
+
+[node name="AudioListener3D" type="AudioListener3D" parent="Level3D"]
+doppler_tracking = 2
+current = true
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
 
