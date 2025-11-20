@@ -23,9 +23,8 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="CellMusicChatGPT3" parent="VSplitContainer/VSplitContainer" instance=ExtResource("4")]
-visible = false
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_vertical = 2
 
 [node name="MusicB" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="0"]
 visible = false
@@ -51,24 +50,22 @@ visible = false
 [node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer"]
 custom_minimum_size = Vector2(5, 5)
 layout_mode = 2
-size_flags_vertical = 1
+size_flags_vertical = 3
+size_flags_stretch_ratio = 5.0
 focus_mode = 2
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 4
 theme_override_fonts/font = ExtResource("2")
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 56
 text = "XXXXXXXXXXXX
 X..........X
 X..........X
 XXDXXXXXXXXX
 X..........X
-########################
-##
-#
-#
-#"
+############"
 autowrap_mode = 3
+clip_text = true
 
 [node name="StatusLabel" type="Label" parent="VSplitContainer"]
 layout_mode = 2
@@ -77,7 +74,7 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 4
 theme_override_fonts/font = ExtResource("2")
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 56
 text = "1 . . . . . . . . X"
 clip_text = true
 
@@ -92,7 +89,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 tooltip_text = "Exit with ~ or Ctrl + L then Press F2 or \" for Tiles"
 theme_override_fonts/font = ExtResource("2")
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 56
 text = "######################
 #@            <#>    #
 #Dx#############n  r #
@@ -108,12 +105,6 @@ offset_right = -36.2033
 offset_bottom = 130.126
 theme = ExtResource("5")
 text = "Hello"
-
-[node name="Level3D" type="Node3D" parent="."]
-
-[node name="AudioListener3D" type="AudioListener3D" parent="Level3D"]
-doppler_tracking = 2
-current = true
 
 [connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
 

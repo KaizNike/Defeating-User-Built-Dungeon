@@ -45,6 +45,7 @@ var autosaveLoc = "user://autosaveDUBD.tres"
 @export var game_save_class := GDScript
 
 var Rooms = []
+var innerRooms = []
 
 const RoomsStore = ["""
 #############
@@ -64,6 +65,7 @@ const RoomsStore = ["""
 
 var game_array := []
 var temp_game_array := []
+var temp_inners := []
 
 # ">" - Down Stair*, "<" - Up Stair*, "Y" - Door Key*, "y" - Chest Key*, "D" - Door*, "K" - Skeleton Key*, "%" - Body*, "+" - Healing Potion*, "c" - Chest, "*" - Secret
 const INTERACTS = [">", "<", "Y", "y", "D", "K", "%", "+", "c", "-", "*"]
@@ -89,8 +91,8 @@ const ENTITIES_DEFINES = {
 "Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2i.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
 "Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2i.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
 "Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2i.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"},
-"Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2i.ZERO, "Dir": Vector2i.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "OnTrajectory", "Inv": [], "bodyDesc": "broken shaft", "Relation": "Projectile"}
-}
+"Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2i.ZERO, "Dir": Vector2i.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "OnTrajectory", "Inv": [], "bodyDesc": "broken shaft", "Relation": "Projectile"},
+"Humanoid": {"Speed": 1, "Turns": 1, "Loc": Vector2(1,0), "HP": 1, "DMG": 1, "Char": "L", "Behav": "Random", "Inv": [], "bodyDesc": "rat", "Relation": "Rats"}}
 
 const ENTITIES_HOSTILES = ["Rats", "Dingos", "Goblin", "Kobold", "Projectile"]
 	
@@ -146,10 +148,10 @@ func _ready():
 		_actors_init(game_array)
 		scoring = scoringOrig.duplicate(true)
 		save_game(autosaveLoc)
-		levelLabel.text = "You are hunting L on floor X,\n do not fail us! \nPress F1 or question mark for help!"
+		levelLabel.text = "You are haunting L on floor X,\n do not fail us! \nPress F1 or question mark for help!"
 		if not is_muted:
 			DisplayServer.tts_stop()
-			DisplayServer.tts_speak("You are hunting L on floor X,\n do not fail us! \n" + "currently playing: " + currentSong.text + "\nPress F1 or question mark for help!", voice[0])
+			DisplayServer.tts_speak("You are haunting L on floor X,\n do not fail us! \n" + "currently playing: " + currentSong.text + "\nPress F1 or question mark for help!", voice[0])
 		statusLabel.text = "Press Anything."
 		if not is_muted:
 			DisplayServer.tts_speak("Press Anything." + "\nAdditionally Drag n drop: .o g v, .o g g, .mp3 to play them in game!", voice[0])
@@ -170,7 +172,7 @@ func _ready():
 		_actors_init(game_array)
 		waiting = true
 		waitingOn = "Start"
-		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!"
+		levelLabel.text = "You returned!\n You still haunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!"
 		levelLabel.grab_focus()
 		statusLabel.text = "Press Anything."
 		if not is_muted:
@@ -1093,9 +1095,6 @@ func _move_actors(array, dir) -> Array:
 							statusLabel.text = "You got hit for " + str(Actor.DMG) + " DMG!"
 							if not is_muted:
 								DisplayServer.tts_speak("You got hit for " + str(Actor.DMG) + " DMG!", voice[0])
-#							yield(tts,"utterance_end")
-#							tts.stop()
-#							yield(get_tree(),"idle_frame")
 							notiTimer.start()
 							break
 					targetIndex += 1
@@ -1371,7 +1370,7 @@ func _show_inv(shownPage):
 		items += 1
 	if items > 5:
 		var moreText = ""
-		var pages = items / 5
+		var pages = items / 5 #How many pages? slash hit it!
 		if items % 5 != 0:
 			pages += 1
 		pageSelect = true
@@ -1748,12 +1747,12 @@ func _clean_pasted_text(text:String) -> String:
 		if line.length() > longestTextLength:
 			longestTextLength = line.length()
 			if longestTextLength > 24:
-				$VSplitContainer/StatusLabel.text = "Max Columns: " + str(longestTextLength) + "/24"
-				if not is_muted:
-					DisplayServer.tts_speak("Max Columns: " + str(longestTextLength) + " of 24", voice[0])
-				$NotificationTimer.start()
+				#$VSplitContainer/StatusLabel.text = "Max Columns: " + str(longestTextLength) + "/24"
+				#if not is_muted:
+					#DisplayServer.tts_speak("Max Columns: " + str(longestTextLength) + " of 24", voice[0])
+				#$NotificationTimer.start(1)
 				line = line.substr(0,24)
-				longestTextLength = 24
+				longestTextLength = 24#0
 	for line in c:
 		if line.length() < longestTextLength:
 			for spot in range(longestTextLength - line.length()):
@@ -1761,10 +1760,10 @@ func _clean_pasted_text(text:String) -> String:
 		if index < 7:
 			returnValue += line + "\n"
 		else:
-			$VSplitContainer/StatusLabel.text = "Max Rows: 6"
-			if not is_muted:
-				DisplayServer.tts_speak("Max Rows: 6", voice[0])
-			$NotificationTimer.start()
+			#$VSplitContainer/StatusLabel.text = "Max Rows: 6"
+			#if not is_muted:
+				#DisplayServer.tts_speak("Max Rows: 6", voice[0])
+			#$NotificationTimer.start()
 			break
 		index += 1
 	
@@ -1881,7 +1880,7 @@ func _on_NotificationTimer_timeout():
 			_status_bar_update()
 		"level":
 			_display_array(game_array)
-			notificationType = "status"
+			notificationType = "status"#radial declined - linear round makes no sense just to read stuatats
 		"both":
 			_status_bar_update()
 			_display_array(game_array)
