@@ -2,9 +2,9 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 23, 0, "-alpha"]
-var versionInfo = """# Vector2i Switch
-## Update to 4.5"""
+var version = [0, 25, 0, "-alpha"]
+var versionInfo = """# THE END LORD NICH DRAFTED:
+	##Kobolds win..."""
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -88,7 +88,7 @@ const ALL = {"#": "Wall"," ": "Floor", ".": "You walked here", "?": "Your vision
 const ENTITIES_DEFINES = {
 "Rat": {"Speed": 2, "Turns": 2, "Loc": Vector2i.ZERO, "HP": 1, "DMG": 1, "Char": "r", "Behav": "Random", "Inv": [], "bodyDesc": "rat", "Relation": "Rats"},
 "Dingo": {"Speed": 3, "Turns": 2, "Loc": Vector2i.ZERO, "HP": 1, "DMG": 2, "Char": "n", "Behav": "Hungry", "Inv": [], "bodyDesc": "dingo", "Relation": "Dingos"},
-"Crate": {"Speed": 0, "Turns": 0, "Loc": Vector2i.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"},
+"Crate": {"Speed": 0, "Turns": 5, "Loc": Vector2i.ZERO, "HP": 3, "DMG": 0, "Char": "x", "Behav": "Still", "Inv": [], "bodyDesc": "crate", "Relation": "None"}, ### Quad beepo says hello, !
 "Goblin": {"Speed": 1, "Turns": 1, "Loc": Vector2i.ZERO, "HP": 2, "DMG": 0, "Char": "g", "Behav": "HunterGather", "Inv": [], "bodyDesc": "goblin", "Relation": "Goblin"},
 "Kobold": {"Speed": 2, "Turns": 2, "Loc": Vector2i.ZERO, "HP": 2, "DMG": 1, "Char": "k", "Behav": "Scavenger", "Inv": [], "bodyDesc": "kobold", "Relation": "Kobold"},
 "Arrow": {"Speed": 3, "Turns":2, "Loc": Vector2i.ZERO, "Dir": Vector2i.ZERO, "HP": 1, "DMG": 1, "Char": "-", "Behav": "OnTrajectory", "Inv": [], "bodyDesc": "broken shaft", "Relation": "Projectile"},
