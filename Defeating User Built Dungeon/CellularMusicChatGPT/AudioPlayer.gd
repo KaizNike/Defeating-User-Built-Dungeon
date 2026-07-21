@@ -116,8 +116,8 @@ func _on_video_popup_popup_hide():
 
 
 func _on_video_stream_player_mouse_entered():
-	if not videoInside:
-		if $VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.is_playing():
+	if not videoInside and $VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.get_child(0):
+		if $VSplitContainer/HBoxContainer/VideoScreen/VideoStreamPlayer.get_child(0).is_playing():
 				$VSplitContainer/HBoxContainer/VideoScreen/Label.visible = true
 	pass # Replace with function body.
 

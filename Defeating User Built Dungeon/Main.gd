@@ -2,9 +2,8 @@
 extends Node
 
 # Major, Minor, Patch
-var version = [0, 24, 0, "-alpha-bbranch"]
-var versionInfo = """# 3D Audio Start
-## Seems like too much work for now."""
+var version = [0, 25, 0, "-alpha-bbranch"]
+var versionInfo = """# 3D Start and Buttons"""
 
 # Future ideas - Friendly or neutral mobs, ghosts (spawn in reused rooms where player died), Pets
 
@@ -43,6 +42,7 @@ var msgOfFinality = ""
 var save_vars = ["Player", "CurrentRoom", "Rooms", "Scoring"]
 var autosaveLoc = "user://autosaveDUBD.tres"
 @export var game_save_class := GDScript
+@export var entNode := preload("res://charab.tscn").instantiate(PackedScene.GEN_EDIT_STATE_DISABLED)
 
 var Rooms = []
 
@@ -124,6 +124,7 @@ var is_muted = false
 var corpses = []
 var body = {"Loc": Vector2i.ZERO, "Inv": [], "Desc": ""}
 
+
 func _ready():
 	print("Game Version: ", version, versionInfo)
 	if OS.get_name() == "Web":
@@ -144,6 +145,7 @@ func _ready():
 		print(Rooms.size())
 		game_array = _get_text_as_array(Rooms[0])
 		_actors_init(game_array)
+		generate_level(game_array)
 		scoring = scoringOrig.duplicate(true)
 		save_game(autosaveLoc)
 		levelLabel.text = "You are hunting L on floor X,\n do not fail us! \nPress F1 or question mark for help!"
@@ -168,6 +170,9 @@ func _ready():
 			xindex = 0
 			yindex += 1
 		_actors_init(game_array)
+		generate_level(
+		game_array
+		)
 		waiting = true
 		waitingOn = "Start"
 		levelLabel.text = "You returned!\n You still hunt L on floor X.\n  Currently on: " + str(currentRoom+1) + "\nPress F1 or question mark for help!"
@@ -227,6 +232,8 @@ func _being_init(Loc, Char):
 func _input(event):
 #	Everything that causes input to be ignored
 	if event is InputEventMouseMotion or (waiting and waitingOn == "Quit"):
+		return
+	if event is InputEventMouseButton:
 		return
 	var dir = Vector2i(event.get_action_strength("move_right") - event.get_action_strength("move_left"), event.get_action_strength("move_down") - event.get_action_strength("move_up"))
 	print(event.as_text())
@@ -374,7 +381,7 @@ func _input(event):
 		_display_array(game_array)
 		_status_bar_update()
 		return
-	if escaping and event.is_pressed():
+	if escaping and (event.is_pressed() and not event is MouseButton):
 		_status_bar_update()
 		escaping = false
 	elif firing and event.is_pressed():
@@ -746,6 +753,7 @@ func _process_turn(array, dir):
 		if not is_muted:
 			DisplayServer.tts_stop()
 			DisplayServer.tts_speak("You are slain.", voice[0])
+			%AudioScreamStreamPlayer3D.activate()
 		msgOfFinality = ""
 	await get_tree().process_frame
 	game_array = A.duplicate()
@@ -862,6 +870,7 @@ func _move_player(array, dir, actor) -> Array:
 		if not is_muted:
 			DisplayServer.tts_stop()
 			DisplayServer.tts_speak("You touch the bounds.", voice[0])
+			%AudioScreamStreamPlayer3D.activate()
 		notiTimer.start()
 		return array
 	print("To ", Loc)
@@ -882,8 +891,10 @@ func _move_player(array, dir, actor) -> Array:
 					DisplayServer.tts_stop()
 					importantHappen = true
 					DisplayServer.tts_speak("You feel: " + ALL.get(Dest), voice[0])
+					%AudioScreamStreamPlayer3D.activate()
 			else:
 				statusLabel.text = "You feel: " + "Something odd..."
+				%AudioScreamStreamPlayer3D.activate()
 				if not is_muted:
 					DisplayServer.tts_stop()
 					importantHappen = true
@@ -924,6 +935,8 @@ func _move_actors(array, dir) -> Array:
 #				actors.sort_custom(SortingActors, "sort_descending")
 				return a
 		elif Actor.Behav == "Still":
+			
+			Actor.Turns -= 1
 			continue
 		elif Actor.Behav == "Hunter":
 			continue
@@ -1118,6 +1131,7 @@ func _move_actors(array, dir) -> Array:
 #				if Actor.Turns > 0:
 #					actors.sort_custom(SortingActors, "sort_descending")
 #					print(actors)
+	generate_level(a)
 	return a
 
 
@@ -1708,6 +1722,30 @@ func _display_array(array : Array):
 	levelLabel.text = text
 #	DisplayServer.tts_speak(text)
 
+func generate_level(array: Array):
+	for child in $Level3D.get_children():
+		if child is GridMap:
+			child.clear()
+	var yind = 0
+	for line in array:
+		var xind = 0
+		for item in line:
+			var check = str(item)
+			if check in ENTITIES:
+				#var entNode = preload("res://charab.tscn")
+				for actor in actors:
+					if actor.Loc == Vector2i(xind,yind):
+						print("YES.")
+						#entNode.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+						$Level3D.add_child(entNode)
+						entNode.position = Vector3(xind,yind,0)
+			elif check in COLLIDES:
+				$Level3D/GridMap.set_cell_item(Vector3i(xind,yind,0),0)
+			xind += 1
+				
+		yind += 1
+			
+
 func _status_bar_update():
 	var text = ""
 	var size = Rooms.size() - 1
@@ -1886,3 +1924,90 @@ func _on_NotificationTimer_timeout():
 			_status_bar_update()
 			_display_array(game_array)
 			notificationType = "status"
+
+
+func _on_button_1_left_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "move_left"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_2_right_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "move_right"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_3_up_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "move_up"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_4_down_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "move_down"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_5_inv_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "inventory"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_6_look_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "look"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_7_help_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "help"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_8_edit_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "enter_level_editor"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_9_quit_pressed() -> void:
+	#if escaping:
+		#get_tree().quit()
+	#escaping = true
+	var event := InputEventAction.new()
+	event.action = "escape"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_10_heal_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "heal"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_11_zap_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "use_scroll"
+	event.pressed = true
+	Input.parse_input_event(event)
+
+
+func _on_button_12_fire_pressed() -> void:
+	var event := InputEventAction.new()
+	event.action = "fire"
+	event.pressed = true
+	Input.parse_input_event(event)

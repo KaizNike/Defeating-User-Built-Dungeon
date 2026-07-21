@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://3g811krhh64p"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_fos0i"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fos0i"]
+
+[node name="CharacterBody3D" type="CharacterBody3D"]
+
+[node name="Player" type="CSGMesh3D" parent="."]
+mesh = SubResource("CapsuleMesh_fos0i")
+
+[node name="AudioListener3D" type="AudioListener3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55508375, 0)
+doppler_tracking = 2
+current = true
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Player"]
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="Player/CSGBox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2387476, -0.7083311)
+
+[node name="CSGBakedCollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87758577, 0.9996321, 1.708349)
+shape = SubResource("CapsuleShape3D_fos0i")

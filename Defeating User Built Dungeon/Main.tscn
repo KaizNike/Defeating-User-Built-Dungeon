@@ -1,10 +1,18 @@
-[gd_scene load_steps=11 format=3 uid="uid://bd62noqnphu2"]
+[gd_scene format=3 uid="uid://bd62noqnphu2"]
 
 [ext_resource type="Script" uid="uid://kwutf625h3bs" path="res://Main.gd" id="1"]
 [ext_resource type="FontFile" path="res://Font.tres" id="2"]
 [ext_resource type="Script" uid="uid://c0al5u4ownohu" path="res://Save_Script.gd" id="3"]
 [ext_resource type="PackedScene" uid="uid://dlo5myqhdgvi6" path="res://CellularMusicChatGPT/AudioPlayer.tscn" id="4"]
 [ext_resource type="Theme" uid="uid://dueujeo1gy1ky" path="res://FontTheme.tres" id="5"]
+[ext_resource type="PackedScene" uid="uid://3g811krhh64p" path="res://charab.tscn" id="6_3dxm6"]
+[ext_resource type="Script" uid="uid://dvrofc1slb7f5" path="res://audio_scream_stream_player_3d.gd" id="7_lgr22"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lgr22"]
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+albedo_color = Color(1, 1, 1, 0.1764706)
 
 [sub_resource type="BoxMesh" id="BoxMesh_fos0i"]
 size = Vector3(2, 2, 2)
@@ -18,17 +26,16 @@ item/0/shapes = []
 item/0/navigation_mesh_transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 item/0/navigation_layers = 1
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_fos0i"]
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fos0i"]
-
 [sub_resource type="Environment" id="Environment_3dxm6"]
 
-[node name="Main" type="Node"]
+[sub_resource type="AudioStreamGenerator" id="AudioStreamGenerator_trn2v"]
+mix_rate = 11100.0
+
+[node name="Main" type="Node" unique_id=1363943511]
 script = ExtResource("1")
 game_save_class = ExtResource("3")
 
-[node name="VSplitContainer" type="VSplitContainer" parent="."]
+[node name="VSplitContainer" type="VSplitContainer" parent="." unique_id=687116795]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -36,37 +43,93 @@ grow_horizontal = 2
 grow_vertical = 2
 dragger_visibility = 2
 
-[node name="VSplitContainer" type="VSplitContainer" parent="VSplitContainer"]
+[node name="VSplitContainer" type="VSplitContainer" parent="VSplitContainer" unique_id=1348157633]
+layout_mode = 2
+size_flags_vertical = 3
+split_offsets = PackedInt32Array(267)
+split_offset = 267
+
+[node name="VSplitContainer" type="VSplitContainer" parent="VSplitContainer/VSplitContainer" unique_id=2103171566]
+layout_mode = 2
+
+[node name="CellMusicChatGPT3" parent="VSplitContainer/VSplitContainer/VSplitContainer" unique_id=2073909154 instance=ExtResource("4")]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CellMusicChatGPT3" parent="VSplitContainer/VSplitContainer" instance=ExtResource("4")]
-visible = false
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="MusicB" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="0"]
+[node name="MusicB" parent="VSplitContainer/VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="0"]
 visible = false
 
-[node name="VoiceB" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="1"]
+[node name="VoiceB" parent="VSplitContainer/VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="1"]
 visible = false
 
-[node name="LoopB" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="3"]
+[node name="LoopB" parent="VSplitContainer/VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="3"]
 visible = false
 
-[node name="ShuffleB" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="4"]
+[node name="ShuffleB" parent="VSplitContainer/VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="4"]
 visible = false
 
-[node name="CurrentSongLabel" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="6"]
+[node name="CurrentSongLabel" parent="VSplitContainer/VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="6"]
 text = "None drag and drop a OGV,OGG,MP3"
 
-[node name="Visualizer" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="8"]
+[node name="Visualizer" parent="VSplitContainer/VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/HBoxContainer" index="8"]
 custom_minimum_size = Vector2(100, 40)
 
-[node name="HBoxContainer2" parent="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer" index="1"]
+[node name="HBoxContainer2" parent="VSplitContainer/VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer" index="1"]
 visible = false
 
-[node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VSplitContainer/VSplitContainer/VSplitContainer" unique_id=360046029]
+layout_mode = 2
+
+[node name="Button1Left" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=1118052018]
+layout_mode = 2
+text = "<-"
+
+[node name="Button2Right" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=975799456]
+layout_mode = 2
+text = "->"
+
+[node name="Button3Up" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=264810650]
+layout_mode = 2
+text = "^
+"
+
+[node name="Button4Down" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=1542060294]
+layout_mode = 2
+text = "⌄"
+
+[node name="Button5Inv" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=589097279]
+layout_mode = 2
+text = "i"
+
+[node name="Button6Look" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=2484311]
+layout_mode = 2
+text = "k"
+
+[node name="Button7Help" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=1586362572]
+layout_mode = 2
+text = "?"
+
+[node name="Button8Edit" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=621541705]
+layout_mode = 2
+text = "~"
+
+[node name="Button9Quit" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=172910349]
+layout_mode = 2
+text = "Esc"
+
+[node name="Button10Heal" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=304994975]
+layout_mode = 2
+text = "+"
+
+[node name="Button11Zap" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=2090975199]
+layout_mode = 2
+text = "Z"
+
+[node name="Button12Fire" type="Button" parent="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer" unique_id=1907158676]
+layout_mode = 2
+text = "X"
+
+[node name="LevelLabel" type="Label" parent="VSplitContainer/VSplitContainer" unique_id=1410550175]
 custom_minimum_size = Vector2(5, 5)
 layout_mode = 2
 size_flags_vertical = 1
@@ -84,7 +147,7 @@ X..........X
 ############"
 autowrap_mode = 3
 
-[node name="StatusLabel" type="Label" parent="VSplitContainer"]
+[node name="StatusLabel" type="Label" parent="VSplitContainer" unique_id=437830438]
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
@@ -95,11 +158,11 @@ theme_override_font_sizes/font_size = 32
 text = "1 . . . . . . . . X"
 clip_text = true
 
-[node name="NotificationTimer" type="Timer" parent="."]
+[node name="NotificationTimer" type="Timer" parent="." unique_id=1130659198]
 wait_time = 6.5
 one_shot = true
 
-[node name="TextEdit" type="TextEdit" parent="."]
+[node name="TextEdit" type="TextEdit" parent="." unique_id=1303526587]
 visible = false
 anchors_preset = 15
 anchor_right = 1.0
@@ -115,7 +178,7 @@ text = "######################
 highlight_current_line = true
 draw_spaces = true
 
-[node name="Label" type="Label" parent="."]
+[node name="Label" type="Label" parent="." unique_id=1048113332]
 offset_left = -241.203
 offset_top = 51.1265
 offset_right = -36.2033
@@ -123,44 +186,52 @@ offset_bottom = 130.126
 theme = ExtResource("5")
 text = "Hello"
 
-[node name="Level3D" type="Node3D" parent="."]
+[node name="Level3D" type="Node3D" parent="." unique_id=862477753]
 
-[node name="CSGBox3D" type="CSGBox3D" parent="Level3D"]
+[node name="CSGBox3D" type="CSGBox3D" parent="Level3D" unique_id=1591104245]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7593299, 0)
 use_collision = true
 size = Vector3(300, 1, 300)
+material = SubResource("StandardMaterial3D_lgr22")
 
-[node name="GridMap" type="GridMap" parent="Level3D"]
+[node name="GridMap" type="GridMap" parent="Level3D" unique_id=1446332195]
 mesh_library = SubResource("MeshLibrary_3dxm6")
 data = {
 "cells": PackedInt32Array(65534, 65535, 0, 65534, 1, 0, 65534, 0, 0, 2, 1, 0, 2, 0, 0, 2, 65535, 0)
 }
 
-[node name="CharacterBody3D" type="CharacterBody3D" parent="Level3D"]
+[node name="CharacterBody3D" parent="Level3D" unique_id=505165883 instance=ExtResource("6_3dxm6")]
 
-[node name="Player" type="CSGMesh3D" parent="Level3D/CharacterBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87758577, 0.9996321, 0.93799925)
-mesh = SubResource("CapsuleMesh_fos0i")
-
-[node name="AudioListener3D" type="AudioListener3D" parent="Level3D/CharacterBody3D/Player"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55508375, 0)
-doppler_tracking = 2
-current = true
-
-[node name="CSGBakedCollisionShape3D" type="CollisionShape3D" parent="Level3D/CharacterBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.87758577, 0.9996321, 0.93799925)
-shape = SubResource("CapsuleShape3D_fos0i")
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="Level3D"]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Level3D" unique_id=1489619994]
 environment = SubResource("Environment_3dxm6")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Level3D/WorldEnvironment"]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Level3D/WorldEnvironment" unique_id=1216948447]
 transform = Transform3D(1, 0, 0, 0, 0, 1, 0, -1, 0, 0, 3, 0)
 
-[node name="Camera3D" type="Camera3D" parent="Level3D"]
+[node name="Camera3D" type="Camera3D" parent="Level3D" unique_id=47399072]
 transform = Transform3D(1, 0, 0, 0, 0.49999997, 0.8660254, 0, -0.8660254, 0.49999997, 0, 15, 10)
 
-[connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
+[node name="AudioScreamStreamPlayer3D" type="AudioStreamPlayer3D" parent="Level3D" unique_id=748941487]
+unique_name_in_owner = true
+stream = SubResource("AudioStreamGenerator_trn2v")
+script = ExtResource("7_lgr22")
 
-[editable path="VSplitContainer/VSplitContainer/CellMusicChatGPT3"]
-[editable path="VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/ScrollContainer/VBoxContainer/PanelContainer"]
+[node name="Timer" type="Timer" parent="Level3D/AudioScreamStreamPlayer3D" unique_id=529975071]
+
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button1Left" to="." method="_on_button_1_left_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button2Right" to="." method="_on_button_2_right_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button3Up" to="." method="_on_button_3_up_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button4Down" to="." method="_on_button_4_down_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button5Inv" to="." method="_on_button_5_inv_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button6Look" to="." method="_on_button_6_look_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button7Help" to="." method="_on_button_7_help_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button8Edit" to="." method="_on_button_8_edit_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button9Quit" to="." method="_on_button_9_quit_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button10Heal" to="." method="_on_button_10_heal_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button11Zap" to="." method="_on_button_11_zap_pressed"]
+[connection signal="pressed" from="VSplitContainer/VSplitContainer/VSplitContainer/HBoxContainer/Button12Fire" to="." method="_on_button_12_fire_pressed"]
+[connection signal="timeout" from="NotificationTimer" to="." method="_on_NotificationTimer_timeout"]
+[connection signal="timeout" from="Level3D/AudioScreamStreamPlayer3D/Timer" to="Level3D/AudioScreamStreamPlayer3D" method="_on_timer_timeout"]
+
+[editable path="VSplitContainer/VSplitContainer/VSplitContainer/CellMusicChatGPT3"]
+[editable path="VSplitContainer/VSplitContainer/VSplitContainer/CellMusicChatGPT3/VSplitContainer/ScrollContainer/VBoxContainer/PanelContainer"]
